@@ -1,11 +1,51 @@
-import { Link } from 'react-router-dom';
+import { useState, type FormEvent } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Label } from '@/components/ui/Label';
 import { Card, CardContent, CardFooter } from '@/components/ui/Card';
-import { Star } from 'lucide-react';
+import { Star, Loader2 } from 'lucide-react';
 
 export default function LoginPage() {
+    const navigate = useNavigate();
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+
+    const handleSubmit = async (e: FormEvent) => {
+        e.preventDefault();
+        setIsLoading(true);
+        setError(null);
+
+        try {
+            const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api/v1'}/auth/login`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ email, password }),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.message || 'Login failed');
+            }
+
+            // Store token in localStorage
+            localStorage.setItem('token', data.token);
+            localStorage.setItem('user', JSON.stringify(data.user));
+
+            // Navigate to home page or dashboard
+            navigate('/dashboard');
+        } catch (err: any) {
+            setError(err.message || 'An error occurred during login');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
     return (
         <div className="min-h-screen flex flex-col items-center justify-center bg-white p-4 sm:p-6 font-sans">
             <div className="w-full max-w-[450px] space-y-8">
@@ -26,43 +66,48 @@ export default function LoginPage() {
 
                 <Card className="border-none shadow-none bg-transparent">
                     <CardContent className="p-0">
-                        <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
+                        {error && (
+                            <div className="mb-4 p-3 rounded-xl bg-red-50 text-red-600 text-sm font-medium border border-red-100">
+                                {error}
+                            </div>
+                        )}
+                        <form className="space-y-4" onSubmit={handleSubmit}>
                             <div className="space-y-2">
                                 <Label htmlFor="email" className="text-xs font-bold uppercase tracking-wider text-[#1a1a1b] opacity-60">Email address</Label>
                                 <Input
                                     id="email"
                                     placeholder="name@example.com"
                                     type="email"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
                                     className="h-14 rounded-2xl border-2 border-[#f4f4f5] bg-[#f4f4f5] focus:bg-white transition-all text-lg font-medium"
                                     required
                                 />
                             </div>
                             <div className="space-y-2">
-                                <div className="flex items-center justify-between">
-                                    <Label htmlFor="password" className="text-xs font-bold uppercase tracking-wider text-[#1a1a1b] opacity-60">Password</Label>
-                                    <Link
-                                        to="/forgot-password"
-                                        className="text-xs font-bold text-primary hover:underline transition-colors"
-                                    >
-                                        Forgot?
-                                    </Link>
-                                </div>
                                 <Input
                                     id="password"
                                     type="password"
                                     required
                                     placeholder="••••••••"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
                                     className="h-14 rounded-2xl border-2 border-[#f4f4f5] bg-[#f4f4f5] focus:bg-white transition-all text-lg font-medium"
                                 />
                             </div>
 
                             <div className="pt-2 space-y-3">
-                                <Button className="w-full text-xl h-14 font-black rounded-full bg-primary hover:bg-primary/90 transition-all active:scale-[0.98] shadow-lg shadow-primary/20">
-                                    Sign In
+                                <Button
+                                    type="submit"
+                                    disabled={isLoading}
+                                    className="w-full text-xl h-14 font-black rounded-full bg-primary hover:bg-primary/90 transition-all active:scale-[0.98] shadow-lg shadow-primary/20 flex items-center justify-center"
+                                >
+                                    {isLoading ? (
+                                        <Loader2 className="w-6 h-6 animate-spin" />
+                                    ) : (
+                                        'Sign In'
+                                    )}
                                 </Button>
-                                {/* <Button variant="secondary" className="w-full text-xl h-14 font-black rounded-full bg-[#1a1a1b] hover:bg-[#1a1a1b]/90 text-white transition-all active:scale-[0.98]">
-                                    Sign In With Google
-                                </Button> */}
                             </div>
                         </form>
                     </CardContent>
@@ -91,3 +136,4 @@ export default function LoginPage() {
         </div>
     );
 }
+

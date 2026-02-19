@@ -7,6 +7,7 @@ import HomePage from './pages/HomePage';
 // import CalculatingResultsPage from './pages/CalculatingResultsPage';
 // import PredictedResultsPage from './pages/PredictedResultsPage';
 import LoginPage from './pages/LoginPage';
+import Dashboard from './pages/Dashboard';
 
 function App() {
     return (
@@ -20,6 +21,7 @@ function App() {
                 <Route path="/calculating" element={<CalculatingResultsPage />} />
                 <Route path="/predicted" element={<PredictedResultsPage />} /> */}
                 <Route path="/login" element={<LoginPage />} />
+                <Route path="/dashboard" element={<Dashboard />} />
                 {/* Fallback for unknown routes */}
                 <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>

@@ -1,9 +1,31 @@
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/Button';
-import { Star } from 'lucide-react';
+import { Star, LogOut } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 export default function HomePage() {
     const navigate = useNavigate();
+    const [isLoggedIn, setIsLoggedIn] = useState(false);
+    const [user, setUser] = useState<any>(null);
+
+    useEffect(() => {
+        const token = localStorage.getItem('token');
+        const storedUser = localStorage.getItem('user');
+        if (token) {
+            setIsLoggedIn(true);
+            if (storedUser) {
+                setUser(JSON.parse(storedUser));
+            }
+        }
+    }, []);
+
+    const handleLogout = () => {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        setIsLoggedIn(false);
+        setUser(null);
+        navigate('/');
+    };
 
     return (
         <div className="selection:bg-primary/10 flex min-h-screen flex-col overflow-x-hidden bg-white font-sans">
@@ -24,17 +46,31 @@ export default function HomePage() {
                         <a href="#" className="text-sm font-bold text-[#1a1a1b] transition-opacity hover:opacity-70">FAQ</a>
                         <a href="#" className="text-sm font-bold text-[#1a1a1b] transition-opacity hover:opacity-70">Contact us</a>
                     </nav>
-                    <button className="bg-primary hover:bg-primary/90 shadow-xl shadow-primary/20 h-[35px] min-w-[25px] rounded-full px-16 text-[14px] font-bold text-white transition-all active:scale-[0.98]" onClick={() => navigate('/login')}>Login</button>
+                    {isLoggedIn ? (
+                        <div className="flex items-center gap-4">
+                            <span className="text-sm font-bold text-[#1a1a1b]">Hi, {user?.firstName || 'User'}</span>
+                            <button
+                                className="bg-[#1a1a1b] hover:bg-[#1a1a1b]/90 shadow-xl shadow-black/10 h-[35px] rounded-full px-6 text-[14px] font-bold text-white transition-all active:scale-[0.98] flex items-center gap-2"
+                                onClick={handleLogout}
+                            >
+                                <LogOut className="w-4 h-4" />
+                                Logout
+                            </button>
+                        </div>
+                    ) : (
+                        <button
+                            className="bg-primary hover:bg-primary/90 shadow-xl shadow-primary/20 h-[35px] rounded-full px-8 text-[14px] font-bold text-white transition-all active:scale-[0.98]"
+                            onClick={() => navigate('/login')}
+                        >
+                            Login
+                        </button>
+                    )}
                 </div>
             </header>
 
-
-
-
             {/* Main Hero Section */}
             <main className="relative flex flex-1 items-center justify-between pt-12 lg:pt-0">
-                <div className="w-full px-10 lg:pl-20 flex flex-col lg:flex-row items-center justify-between gap-8"> {/* Reduced gap here */}
-
+                <div className="w-full px-10 lg:pl-20 flex flex-col lg:flex-row items-center justify-between gap-8">
                     {/* Left Side: Text Content */}
                     <div className="z-10 w-full lg:w-1/2 space-y-12 animate-in fade-in slide-in-from-left duration-700 text-left">
                         <div className="space-y-6">
@@ -46,13 +82,13 @@ export default function HomePage() {
                             </p>
                         </div>
 
-                        <div className="mt-6 lg:mt-8 space-y-6"> {/* Adjusted margin-top here */}
+                        <div className="mt-6 lg:mt-8 space-y-6">
                             <p className="text-[10px] font-black uppercase tracking-[0.08em] text-[#1a1a1b]/30">
                                 Start by selecting your gender:
                             </p>
                             <div className="flex flex-col sm:flex-row justify-start gap-4">
                                 <Button
-                                    className="bg-primary hover:bg-primary/90 shadow-xl shadow-primary/20 h-[55px] min-w-[25px] rounded-full px-16 text-[24px] font-bold text-white transition-all active:scale-[0.98]"
+                                    className="bg-primary hover:bg-primary/90 shadow-xl shadow-primary/20 h-[55px] min-w-[210px] rounded-full px-16 text-[24px] font-bold text-white transition-all active:scale-[0.98]"
                                     onClick={() => navigate('/quiz')}
                                 >
                                     Female
@@ -96,7 +132,6 @@ export default function HomePage() {
                 </div>
             </main>
 
-
             {/* Footer */}
             <footer className="w-full px-10 py-12 mt-auto">
                 <div className="mx-auto max-w-[1400px] flex flex-col items-start justify-between gap-8 border-t border-black/[0.04] pt-12 md:flex-row">
@@ -114,3 +149,4 @@ export default function HomePage() {
         </div>
     );
 }
+
