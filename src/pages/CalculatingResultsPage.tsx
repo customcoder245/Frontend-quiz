@@ -27,11 +27,7 @@ export default function CalculatingResultsPage() {
             {/* Header */}
             <header className="px-6 py-6 flex items-center justify-between border-b border-[#1a1a1b]/5">
                 <div className="flex items-center cursor-pointer" onClick={() => navigate('/')}>
-                    <span className="block text-[8px] uppercase tracking-[0.3em] font-black text-[#1a1a1b] opacity-40 leading-none mr-1">The</span>
-                    <div className="flex items-center">
-                        <span className="text-lg font-black uppercase tracking-tighter text-[#1a1a1b]">Med</span>
-                        <span className="text-lg font-black uppercase ml-0.5 tracking-tighter text-primary">Diet</span>
-                    </div>
+                    <img src="/logo.png" alt="The Mediterranean Diet" className="h-8 md:h-10 w-auto object-contain" />
                 </div>
 
                 <div className="hidden sm:flex items-center space-x-6">

@@ -10,18 +10,8 @@ export default function LoginPage() {
         <div className="min-h-screen flex flex-col items-center justify-center bg-white p-4 sm:p-6 font-sans">
             <div className="w-full max-w-[450px] space-y-8">
                 {/* Logo from Screenshot */}
-                <div className="text-left md:text-center group">
-                    <div className="inline-block transition-transform duration-300">
-                        <span className="block text-[10px] uppercase tracking-[0.3em] font-black text-[#1a1a1b] opacity-40 leading-none ml-1">The</span>
-                        <div className="flex items-center -mt-1">
-                            <span className="text-3xl font-black text-[#1a1a1b] uppercase tracking-tighter">
-                                Mediterranean
-                            </span>
-                            <span className="text-3xl font-black text-primary uppercase ml-1 tracking-tighter">
-                                Diet
-                            </span>
-                        </div>
-                    </div>
+                <div className="flex justify-center mb-8">
+                    <img src="/logo.png" alt="The Mediterranean Diet" className="h-16 md:h-20 w-auto object-contain" />
                 </div>
 
                 <div className="space-y-4">
@@ -70,9 +60,9 @@ export default function LoginPage() {
                                 <Button className="w-full text-xl h-14 font-black rounded-full bg-primary hover:bg-primary/90 transition-all active:scale-[0.98] shadow-lg shadow-primary/20">
                                     Sign In
                                 </Button>
-                                <Button variant="secondary" className="w-full text-xl h-14 font-black rounded-full bg-[#1a1a1b] hover:bg-[#1a1a1b]/90 text-white transition-all active:scale-[0.98]">
+                                {/* <Button variant="secondary" className="w-full text-xl h-14 font-black rounded-full bg-[#1a1a1b] hover:bg-[#1a1a1b]/90 text-white transition-all active:scale-[0.98]">
                                     Sign In With Google
-                                </Button>
+                                </Button> */}
                             </div>
                         </form>
                     </CardContent>
