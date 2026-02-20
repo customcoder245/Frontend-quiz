@@ -411,7 +411,7 @@ export const Dashboard = () => {
             onClick={() => setActiveTab('submissions')}
             badge={submissionData.length}
           />
-
+          {/* 
           <div className="pt-6">
             <SidebarHeader title="Management" />
             <SidebarLink
@@ -420,7 +420,7 @@ export const Dashboard = () => {
               active={activeTab === 'questions'}
               onClick={() => setActiveTab('questions')}
             />
-          </div>
+          </div> */}
 
           <div className="mt-auto pt-6 border-t border-white/10">
             <SidebarLink
