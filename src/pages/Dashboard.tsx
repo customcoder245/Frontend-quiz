@@ -58,6 +58,10 @@ export const Dashboard = () => {
     'analytics' | 'submissions' | 'questions'
   >('analytics');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [selectedSubmission, setSelectedSubmission] = useState<Submission | null>(
+    null
+  );
+  const [isSubmissionModalOpen, setIsSubmissionModalOpen] = useState(false);
 
   const handleLogout = () => {
     // Logic to clear user session/token could go here
@@ -263,11 +267,15 @@ export const Dashboard = () => {
       { Header: 'Date', accessor: 'date' },
       {
         Header: 'Actions',
-        accessor: () => (
+        accessor: (row: Submission) => (
           <Button
             variant="ghost"
             size="sm"
             className="h-8 w-8 rounded-full p-0"
+            onClick={() => {
+              setSelectedSubmission(row);
+              setIsSubmissionModalOpen(true);
+            }}
           >
             <MoreVertical className="text-muted-foreground h-4 w-4" />
           </Button>
@@ -920,6 +928,69 @@ export const Dashboard = () => {
                   className="shadow-primary/20 flex-1 rounded-xl font-bold shadow-lg"
                 >
                   {editingQuestion ? 'Update Changes' : 'Create Question'}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+      {/* --- Submission Details Modal --- */}
+      {isSubmissionModalOpen && selectedSubmission && (
+        <div className="animate-in fade-in fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm duration-200">
+          <Card className="max-h-[90vh] w-full max-w-xl overflow-hidden overflow-y-auto rounded-[32px] border-none shadow-2xl">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 border-b p-6 md:p-8">
+              <div>
+                <CardTitle className="text-xl md:text-2xl font-black">Submission Details</CardTitle>
+                <CardDescription>
+                  Detailed view of user response
+                </CardDescription>
+              </div>
+              <Button
+                onClick={() => setIsSubmissionModalOpen(false)}
+                variant="ghost"
+                size="sm"
+                className="h-8 w-8 rounded-full p-0"
+              >
+                <X size={18} />
+              </Button>
+            </CardHeader>
+            <CardContent className="p-6 md:p-8 space-y-6 pt-6">
+              <div className="grid grid-cols-2 gap-6">
+                <div className="space-y-1">
+                  <p className="text-muted-foreground text-[10px] font-bold tracking-widest uppercase">Name</p>
+                  <p className="font-bold">{selectedSubmission.name}</p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-muted-foreground text-[10px] font-bold tracking-widest uppercase">Date</p>
+                  <p className="font-bold">{selectedSubmission.date}</p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-muted-foreground text-[10px] font-bold tracking-widest uppercase">Email</p>
+                  <p className="font-bold">{selectedSubmission.email}</p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-muted-foreground text-[10px] font-bold tracking-widest uppercase">Phone</p>
+                  <p className="font-bold">{selectedSubmission.phone}</p>
+                </div>
+              </div>
+
+              <div className="bg-muted/30 rounded-2xl p-6 space-y-4">
+                <div className="space-y-1">
+                  <p className="text-muted-foreground text-[10px] font-bold tracking-widest uppercase">Question</p>
+                  <p className="font-medium text-sm leading-relaxed">{selectedSubmission.questions}</p>
+                </div>
+                <div className="space-y-1 border-t border-[#1a1a1b]/5 pt-4">
+                  <p className="text-muted-foreground text-[10px] font-bold tracking-widest uppercase">User Response</p>
+                  <p className="text-primary font-bold text-lg">{selectedSubmission.selectedOptions}</p>
+                </div>
+              </div>
+
+              <div className="pt-4">
+                <Button
+                  onClick={() => setIsSubmissionModalOpen(false)}
+                  className="w-full h-12 rounded-xl font-bold bg-gradient-to-r from-[#D90655] to-[#FC3F39] text-white hover:opacity-90 shadow-lg shadow-[#D90655]/20"
+                >
+                  Close Details
                 </Button>
               </div>
             </CardContent>
