@@ -4,7 +4,7 @@ import { useTable, usePagination, useGlobalFilter } from 'react-table';
 import {
   LayoutDashboard,
   ClipboardList,
-  Settings,
+  // Settings,
   Search,
   Plus,
   Edit2,
@@ -13,7 +13,7 @@ import {
   TrendingUp,
   CheckCircle,
   ChevronRight,
-  Filter,
+  // Filter,
   Download,
   MoreVertical,
   X,
