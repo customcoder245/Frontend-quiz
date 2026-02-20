@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 @theme {
-    --color-brand-primary: #f53259;
+    --color-brand-primary: #D90655;
     --color-brand-secondary: #1a1a1b;
     --color-brand-muted: #64748b;
 
@@ -34,7 +34,7 @@
     --card-foreground: #1a1a1b;
     --popover: #ffffff;
     --popover-foreground: #1a1a1b;
-    --primary: #f53259;
+    --primary: #D90655;
     --primary-foreground: #ffffff;
     --secondary: #1a1a1b;
     --secondary-foreground: #ffffff;
@@ -46,7 +46,7 @@
     --destructive-foreground: #ffffff;
     --border: #e4e4e7;
     --input: #e4e4e7;
-    --ring: #f53259;
+    --ring: #D90655;
     --radius: 0.75rem;
 }
 
@@ -57,7 +57,7 @@
     --card-foreground: #fafafa;
     --popover: #09090b;
     --popover-foreground: #fafafa;
-    --primary: #f53259;
+    --primary: #D90655;
     --primary-foreground: #fafafa;
     --secondary: #27272a;
     --secondary-foreground: #fafafa;
@@ -69,7 +69,7 @@
     --destructive-foreground: #fafafa;
     --border: #27272a;
     --input: #27272a;
-    --ring: #f53259;
+    --ring: #D90655;
 }
 
 @layer base {

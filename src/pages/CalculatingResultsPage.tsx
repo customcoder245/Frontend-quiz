@@ -72,8 +72,8 @@ export default function CalculatingResultsPage() {
                         />
                         <defs>
                             <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                                <stop offset="0%" stopColor="#f53259" />
-                                <stop offset="100%" stopColor="#e11d48" />
+                                <stop offset="0%" stopColor="#D90655" />
+                                <stop offset="100%" stopColor="#FC3F39" />
                             </linearGradient>
                         </defs>
                     </svg>

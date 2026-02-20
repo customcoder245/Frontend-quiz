@@ -54,7 +54,7 @@ export default function EmailFormPage() {
                     </div>
 
                     <Button
-                        className="w-full h-16 text-xl font-black rounded-full shadow-lg shadow-primary/20 mt-8"
+                        className="w-full h-16 text-xl font-black rounded-full shadow-lg shadow-[#D90655]/20 mt-8"
                         type="submit"
                     >
                         Continue

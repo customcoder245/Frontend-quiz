@@ -36,7 +36,7 @@ export default function BreakPage1() {
                     </span>
                 </div>
                 <div className="w-full h-2 bg-[#f4f4f5] rounded-full overflow-hidden relative">
-                    <div className="h-full bg-primary rounded-full transition-all duration-500" style={{ width: '8.33%' }} />
+                    <div className="h-full bg-gradient-to-r from-[#D90655] to-[#FC3F39] rounded-full transition-all duration-500" style={{ width: '8.33%' }} />
                     <div className="absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-[#1a1a1b] border-2 border-white rounded-full shadow-md z-10 left-[calc(8.33%-8px)]" />
                 </div>
             </div>

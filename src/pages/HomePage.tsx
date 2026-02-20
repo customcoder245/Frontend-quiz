@@ -43,7 +43,7 @@ export default function HomePage() {
                             <a href="#" className="text-sm font-bold text-[#1a1a1b] transition-opacity hover:opacity-70">FAQ</a>
                             <a href="#" className="text-sm font-bold text-[#1a1a1b] transition-opacity hover:opacity-70">Contact us</a>
                         </nav>
-                        <button className="hidden md:block bg-primary hover:bg-primary/90 shadow-xl shadow-primary/20 h-[35px] min-w-[25px] rounded-full px-8 md:px-16 text-[14px] font-bold text-white transition-all active:scale-[0.98]" onClick={() => navigate('/login')}>Login</button>
+                        <button className="hidden md:block bg-gradient-to-r from-[#D90655] to-[#FC3F39] hover:opacity-90 shadow-xl shadow-primary/20 h-[35px] min-w-[25px] rounded-full px-8 md:px-16 text-[14px] font-bold text-white transition-all active:scale-[0.98]" onClick={() => navigate('/login')}>Login</button>
 
                         {/* Mobile Menu Toggle */}
                         <button
@@ -82,7 +82,7 @@ export default function HomePage() {
 
                     <div className="mt-auto pt-8 border-t border-black/5">
                         <button
-                            className="w-full bg-primary hover:bg-primary/90 shadow-xl shadow-primary/20 h-[50px] rounded-full text-[16px] font-bold text-white transition-all active:scale-[0.98]"
+                            className="w-full bg-gradient-to-r from-[#D90655] to-[#FC3F39] hover:opacity-90 shadow-xl shadow-primary/20 h-[50px] rounded-full text-[16px] font-bold text-white transition-all active:scale-[0.98]"
                             onClick={() => navigate('/login')}
                         >
                             Login
@@ -122,7 +122,7 @@ export default function HomePage() {
 
                             <div className="flex flex-col sm:flex-row gap-5">
                                 <button
-                                    className="h-[56px] sm:w-[196px] rounded-[50px] bg-gradient-to-r from-[#e91e63] to-[#f06292] text-[24px] font-bold text-white transition-all active:scale-[0.98] shadow-xl shadow-pink-100"
+                                    className="h-[56px] sm:w-[196px] rounded-[50px] bg-gradient-to-r from-[#D90655] to-[#FC3F39] text-[24px] font-bold text-white transition-all active:scale-[0.98] shadow-xl shadow-pink-100"
                                     onClick={() => navigate('/quiz')}
                                 >
                                     Female

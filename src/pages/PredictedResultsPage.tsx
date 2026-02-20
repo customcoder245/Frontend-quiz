@@ -42,7 +42,7 @@ export default function PredictedResultsPage() {
                         <div className="flex justify-between items-start">
                             <div className="space-y-1">
                                 <p className="text-sm font-black text-[#1a1a1b]/20 uppercase tracking-widest">82kg</p>
-                                <div className="w-3 h-3 bg-primary rounded-full border-2 border-white shadow-sm" />
+                                <div className="w-3 h-3 bg-[#D90655] rounded-full border-2 border-white shadow-sm" />
                             </div>
                             <div className="text-right space-y-1">
                                 <div className="bg-[#34a853] text-white text-[10px] font-black rounded-lg px-3 py-1.5 mb-2 inline-block shadow-lg shadow-[#34a853]/20">
@@ -56,7 +56,7 @@ export default function PredictedResultsPage() {
 
                         {/* Chart Line Placeholder */}
                         <div className="absolute inset-0 flex items-center justify-center -z-10 px-6">
-                            <div className="w-full h-1 bg-gradient-to-r from-primary via-yellow-400 to-[#34a853] rounded-full transform rotate-12 opacity-50" />
+                            <div className="w-full h-1 bg-gradient-to-r from-[#D90655] via-[#FC3F39] to-[#34a853] rounded-full transform rotate-12 opacity-50" />
                         </div>
 
                         <div className="flex justify-between text-[11px] font-black uppercase tracking-widest text-[#1a1a1b]/20 pt-8 border-t border-[#1a1a1b]/5">
@@ -97,7 +97,7 @@ export default function PredictedResultsPage() {
 
                 <div className="w-full pt-12 space-y-4">
                     <Button
-                        className="w-full h-16 text-xl font-black rounded-full shadow-lg shadow-primary/20 bg-primary hover:bg-primary/90"
+                        className="w-full h-16 text-xl font-black rounded-full shadow-lg shadow-[#D90655]/20 bg-gradient-to-r from-[#D90655] to-[#FC3F39] hover:opacity-90"
                         onClick={() => navigate('/login')}
                     >
                         Continue to your personalized plan

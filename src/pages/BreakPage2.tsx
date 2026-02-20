@@ -38,8 +38,8 @@ export default function BreakPage2() {
                 <div className="w-full bg-white rounded-[32px] p-1 border-2 border-[#1a1a1b]/5 shadow-xl shadow-[#1a1a1b]/5 mb-8">
                     <div className="p-8 space-y-8">
                         <div className="flex items-center space-x-4">
-                            <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center text-primary">
-                                <Heart className="w-6 h-6 fill-primary" />
+                            <div className="w-12 h-12 bg-[#D90655]/10 rounded-full flex items-center justify-center text-[#D90655]">
+                                <Heart className="w-6 h-6 fill-[#D90655]" />
                             </div>
                             <span className="text-2xl font-black text-[#1a1a1b]">Body Mass Index (BMI)</span>
                         </div>

@@ -5,7 +5,6 @@ import { useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard,
   ClipboardList,
-  // Settings,
   Search,
   Plus,
   Edit2,
@@ -14,16 +13,16 @@ import {
   TrendingUp,
   CheckCircle,
   ChevronRight,
-  // Filter,
-  Download,
   MoreVertical,
+  Download,
   X,
   CreditCard,
   PieChart,
   CheckSquare,
   Circle,
-  Settings,
   LogOut,
+  Menu,
+  Settings,
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import {
@@ -58,10 +57,45 @@ export const Dashboard = () => {
   const [activeTab, setActiveTab] = useState<
     'analytics' | 'submissions' | 'questions'
   >('analytics');
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const handleLogout = () => {
     // Logic to clear user session/token could go here
     navigate('/login');
+  };
+
+  const handleExportCSV = () => {
+    // Define headers
+    const headers = ['ID', 'Name', 'Email', 'Phone', 'Gender', 'Question', 'Selected Option', 'Date'];
+
+    // Map data to rows
+    const rows = submissionData.map((sub) => [
+      sub.id,
+      sub.name,
+      sub.email,
+      sub.phone,
+      sub.gender,
+      `"${sub.questions.replace(/"/g, '""')}"`,
+      `"${sub.selectedOptions.replace(/"/g, '""')}"`,
+      sub.date,
+    ]);
+
+    // Combine headers and rows
+    const csvContent = [
+      headers.join(','),
+      ...rows.map((row) => row.join(',')),
+    ].join('\n');
+
+    // Create download link
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `submissions_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   // --- Questions CRUD State ---
@@ -327,17 +361,31 @@ export const Dashboard = () => {
   return (
     <div className="bg-muted/30 text-foreground flex min-h-screen font-sans">
       {/* --- Sidebar --- */}
-      <aside className="bg-secondary text-secondary-foreground transition-width fixed inset-y-0 z-30 flex w-72 flex-col shadow-2xl duration-300">
-        <div className="p-8 pb-4">
+      {/* Mobile Backdrop */}
+      {isSidebarOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm lg:hidden"
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
+
+      <aside className={`bg-secondary text-secondary-foreground fixed inset-y-0 z-50 flex w-72 flex-col shadow-2xl transition-transform duration-300 lg:translate-x-0 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+        <div className="p-8 pb-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             {/* Placeholder Logo */}
-            <div className="bg-primary/20 text-primary flex h-10 w-10 items-center justify-center rounded-xl">
-              <PieChart className="text-primary h-6 w-6" />
+            <div className="bg-gradient-to-r from-[#D90655] to-[#FC3F39] bg-opacity-20 text-white flex h-10 w-10 items-center justify-center rounded-xl">
+              <PieChart className="text-white h-6 w-6" />
             </div>
-            <span className="text-xl font-bold tracking-tight text-white">
+            <span className="text-lg md:text-xl font-bold tracking-tight text-white">
               QuizMaster
             </span>
           </div>
+          <button
+            className="lg:hidden p-2 text-white/60 hover:text-white"
+            onClick={() => setIsSidebarOpen(false)}
+          >
+            <X size={20} />
+          </button>
         </div>
 
         <nav className="mt-8 flex-1 space-y-2 px-4">
@@ -348,7 +396,7 @@ export const Dashboard = () => {
             active={activeTab === 'analytics'}
             onClick={() => setActiveTab('analytics')}
           />
-          {/* <SidebarLink
+          <SidebarLink
             icon={<ClipboardList size={20} />}
             label="Submissions"
             active={activeTab === 'submissions'}
@@ -364,7 +412,7 @@ export const Dashboard = () => {
               active={activeTab === 'questions'}
               onClick={() => setActiveTab('questions')}
             />
-          </div> */}
+          </div>
 
           <div className="mt-auto pt-6 border-t border-white/10">
             <SidebarLink
@@ -377,7 +425,7 @@ export const Dashboard = () => {
 
         <div className="border-t border-white/10 bg-black/20 p-6">
           <div className="flex items-center gap-3">
-            <div className="bg-primary shadow-primary/20 flex h-10 w-10 items-center justify-center rounded-full text-sm font-bold text-white shadow-lg">
+            <div className="bg-gradient-to-r from-[#D90655] to-[#FC3F39] shadow-primary/20 flex h-10 w-10 items-center justify-center rounded-full text-sm font-bold text-white shadow-lg">
               AD
             </div>
             <div className="flex flex-col overflow-hidden">
@@ -391,16 +439,24 @@ export const Dashboard = () => {
       </aside>
 
       {/* --- Main Content --- */}
-      <main className="ml-72 flex min-w-0 flex-1 flex-col">
+      <main className="flex min-w-0 flex-1 flex-col lg:ml-72 transition-all duration-300">
         {/* Header */}
-        <header className="bg-background/80 sticky top-0 z-20 flex h-20 items-center justify-between border-b px-8 backdrop-blur-md">
-          <div>
-            <h1 className="text-foreground text-2xl font-bold tracking-tight capitalize">
-              {activeTab === 'questions' ? 'Question Bank' : activeTab}
-            </h1>
-            <p className="text-muted-foreground mt-0.5 text-xs font-medium">
-              Welcome back, get up to speed.
-            </p>
+        <header className="bg-background/80 sticky top-0 z-20 flex h-16 md:h-20 items-center justify-between border-b px-4 md:px-8 backdrop-blur-md">
+          <div className="flex items-center gap-4">
+            <button
+              className="lg:hidden p-2 text-foreground/60 hover:text-foreground"
+              onClick={() => setIsSidebarOpen(true)}
+            >
+              <Menu size={24} />
+            </button>
+            <div className="flex flex-col">
+              <h1 className="text-foreground text-xl md:text-2xl font-bold tracking-tight capitalize">
+                {activeTab === 'questions' ? 'Question Bank' : activeTab}
+              </h1>
+              <p className="text-muted-foreground mt-0.5 text-[10px] md:text-xs font-medium">
+                Welcome back, get up to speed.
+              </p>
+            </div>
           </div>
 
           <div className="flex items-center gap-4">
@@ -416,11 +472,11 @@ export const Dashboard = () => {
           </div>
         </header>
 
-        <div className="mx-auto w-full max-w-[1600px] space-y-8 p-8">
+        <div className="mx-auto w-full max-w-[1600px] space-y-6 md:space-y-8 p-3 md:p-8">
           {/* --- Analytics Tab --- */}
           {activeTab === 'analytics' && (
             <div className="animate-in fade-in space-y-8 duration-500">
-              <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4 md:gap-6">
                 <StatCard
                   icon={<Users className="text-blue-500" />}
                   label="Total Users"
@@ -465,23 +521,25 @@ export const Dashboard = () => {
                       </Button>
                     </div>
                   </CardHeader>
-                  <CardContent className="pt-4">
-                    <div className="flex h-[300px] w-full items-end justify-between gap-4 px-2">
-                      {[45, 78, 55, 92, 68, 85, 50, 88, 98, 65, 76, 82].map(
-                        (h, i) => (
-                          <div
-                            key={i}
-                            className="bg-primary/10 group hover:bg-primary/80 relative w-full rounded-t-xl transition-all"
-                            style={{ height: `${h}%` }}
-                          >
-                            <div className="bg-secondary text-secondary-foreground absolute -top-10 left-1/2 z-10 -translate-x-1/2 rounded px-2 py-1 text-xs font-bold whitespace-nowrap opacity-0 shadow-lg transition-opacity group-hover:opacity-100">
-                              {h * 12} leads
+                  <CardContent className="pt-4 p-3 sm:p-6">
+                    <div className="overflow-x-auto pb-4 custom-scrollbar">
+                      <div className="flex h-[250px] md:h-[300px] min-w-[500px] md:min-w-0 items-end justify-between gap-1.5 md:gap-4 px-2">
+                        {[45, 78, 55, 92, 68, 85, 50, 88, 98, 65, 76, 82].map(
+                          (h, i) => (
+                            <div
+                              key={i}
+                              className="bg-[#D90655]/10 group hover:bg-gradient-to-t hover:from-[#D90655] hover:to-[#FC3F39] relative w-full rounded-t-xl transition-all"
+                              style={{ height: `${h}%` }}
+                            >
+                              <div className="bg-secondary text-secondary-foreground absolute -top-10 left-1/2 z-10 -translate-x-1/2 rounded px-2 py-1 text-xs font-bold whitespace-nowrap opacity-0 shadow-lg transition-opacity group-hover:opacity-100">
+                                {h * 12} leads
+                              </div>
                             </div>
-                          </div>
-                        )
-                      )}
+                          )
+                        )}
+                      </div>
                     </div>
-                    <div className="text-muted-foreground mt-4 flex justify-between px-2 text-xs font-medium tracking-wider uppercase">
+                    <div className="text-muted-foreground mt-4 flex justify-between px-2 text-[10px] md:text-xs font-medium tracking-wider uppercase">
                       <span>Mon</span>
                       <span>Tue</span>
                       <span>Wed</span>
@@ -504,7 +562,7 @@ export const Dashboard = () => {
                     <GenderProgress
                       label="Female"
                       percentage={68}
-                      color="bg-primary"
+                      color="bg-gradient-to-r from-[#D90655] to-[#FC3F39]"
                     />
                     <GenderProgress
                       label="Male"
@@ -546,6 +604,7 @@ export const Dashboard = () => {
                 </div>
                 <Button
                   variant="outline"
+                  onClick={handleExportCSV}
                   className="border-muted-foreground/20 gap-2 rounded-full text-xs font-bold"
                 >
                   <Download size={14} /> Export CSV
@@ -647,27 +706,27 @@ export const Dashboard = () => {
                     setNewQuestionText('');
                     setNewQuestionOptions('');
                   }}
-                  className="shadow-primary/20 flex items-center gap-2 rounded-full px-6 font-bold shadow-lg"
+                  className="shadow-primary/20 flex items-center gap-2 rounded-full px-4 md:px-6 py-2 md:py-3 font-bold shadow-lg text-sm md:text-base"
                 >
-                  <Plus size={18} /> Add Question
+                  <Plus size={18} /> <span className="hidden sm:inline">Add Question</span><span className="sm:hidden">Add</span>
                 </Button>
               </div>
 
-              <div className="grid grid-cols-1 gap-5">
+              <div className="grid grid-cols-1 gap-4 md:gap-5">
                 {questions.map((q, idx) => (
                   <div
                     key={q.id}
                     className="hover:border-primary/20 group flex rounded-3xl border border-transparent bg-white p-1 shadow-sm transition-all"
                   >
                     {/* Numbering Column */}
-                    <div className="bg-muted/50 flex w-16 flex-col items-center justify-center gap-2 rounded-l-[20px] rounded-r-lg">
+                    <div className="bg-muted/50 hidden sm:flex w-16 flex-col items-center justify-center gap-2 rounded-l-[20px] rounded-r-lg">
                       <span className="text-muted-foreground/40 text-2xl font-black">
                         {idx + 1}
                       </span>
                     </div>
 
                     {/* Content */}
-                    <div className="flex flex-1 flex-col justify-between gap-4 p-6 md:flex-row md:items-center">
+                    <div className="flex flex-1 flex-col justify-between gap-4 p-4 md:p-6 md:flex-row md:items-center">
                       <div className="space-y-3">
                         <div className="flex items-center gap-3">
                           <span
@@ -889,7 +948,7 @@ const SidebarLink = ({
   <div
     onClick={onClick}
     className={`group mx-2 flex cursor-pointer items-center gap-3 rounded-xl px-4 py-3 transition-all ${active
-      ? 'bg-primary shadow-primary/25 text-white shadow-lg'
+      ? 'bg-gradient-to-r from-[#D90655] to-[#FC3F39] shadow-primary/25 text-white shadow-lg'
       : 'text-white/60 hover:bg-white/10 hover:text-white'
       } `}
   >
@@ -931,13 +990,13 @@ const StatCard = ({
   color: string;
 }) => (
   <Card className="group cursor-default overflow-hidden rounded-2xl border-none bg-white shadow-sm transition-all duration-300 hover:shadow-md">
-    <CardContent className="p-6">
+    <CardContent className="p-4 sm:p-6">
       <div className="flex items-start justify-between">
         <div>
-          <p className="text-muted-foreground mb-1 text-xs font-bold tracking-wider uppercase">
+          <p className="text-muted-foreground mb-1 text-[10px] md:text-xs font-bold tracking-wider uppercase">
             {label}
           </p>
-          <h2 className="text-foreground text-3xl font-black tracking-tight">
+          <h2 className="text-foreground text-2xl md:text-3xl font-black tracking-tight">
             {value}
           </h2>
         </div>

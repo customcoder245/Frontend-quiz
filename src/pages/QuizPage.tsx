@@ -62,7 +62,7 @@ export default function QuizPage() {
 
                 <div className="w-full h-2 bg-[#f4f4f5] rounded-full overflow-hidden relative">
                     <div
-                        className="h-full bg-primary transition-all duration-500 rounded-full"
+                        className="h-full bg-gradient-to-r from-[#D90655] to-[#FC3F39] transition-all duration-500 rounded-full"
                         style={{ width: `${(step / totalSteps) * 100}%` }}
                     />
                     {/* Circle Indicator */}
@@ -91,7 +91,7 @@ export default function QuizPage() {
                             onClick={() => handleOptionSelect(index)}
                             className={`w-full p-6 text-xl font-bold rounded-2xl border-2 transition-all flex items-center justify-center text-center leading-tight
                                 ${selectedOption === index
-                                    ? 'bg-primary border-primary text-white shadow-lg shadow-primary/20 scale-[1.02]'
+                                    ? 'bg-gradient-to-r from-[#D90655] to-[#FC3F39] border-transparent text-white shadow-lg shadow-[#D90655]/20 scale-[1.02]'
                                     : 'bg-[#f4f4f5] border-[#f4f4f5] text-[#1a1a1b] hover:border-[#1a1a1b]/10'
                                 }`}
                         >
