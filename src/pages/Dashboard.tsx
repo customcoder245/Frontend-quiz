@@ -17,7 +17,6 @@ import {
   Download,
   X,
   CreditCard,
-  PieChart,
   CheckSquare,
   Circle,
   LogOut,
@@ -377,19 +376,20 @@ export const Dashboard = () => {
         />
       )}
 
-      <aside className={`bg-secondary text-secondary-foreground fixed inset-y-0 z-50 flex w-72 flex-col shadow-2xl transition-transform duration-300 lg:translate-x-0 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+      <aside className={`bg-white border-r border-[#1a1a1b]/5 fixed inset-y-0 z-50 flex w-72 flex-col shadow-xl transition-transform duration-300 lg:translate-x-0 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         <div className="p-8 pb-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            {/* Placeholder Logo */}
-            <div className="bg-gradient-to-r from-[#D90655] to-[#FC3F39] bg-opacity-20 text-white flex h-10 w-10 items-center justify-center rounded-xl">
-              <PieChart className="text-white h-6 w-6" />
-            </div>
-            <span className="text-lg md:text-xl font-bold tracking-tight text-white">
-              QuizMaster
-            </span>
+          <div
+            className="flex items-center cursor-pointer hover:opacity-80 transition-opacity"
+            onClick={() => navigate('/')}
+          >
+            <img
+              src="/logo.png"
+              alt="The Mediterranean Diet"
+              className="h-10 w-auto object-contain"
+            />
           </div>
           <button
-            className="lg:hidden p-2 text-white/60 hover:text-white"
+            className="lg:hidden p-2 text-[#1a1a1b]/60 hover:text-[#1a1a1b]"
             onClick={() => setIsSidebarOpen(false)}
           >
             <X size={20} />
@@ -411,7 +411,7 @@ export const Dashboard = () => {
             onClick={() => setActiveTab('submissions')}
             badge={submissionData.length}
           />
-          {/* 
+
           <div className="pt-6">
             <SidebarHeader title="Management" />
             <SidebarLink
@@ -420,9 +420,9 @@ export const Dashboard = () => {
               active={activeTab === 'questions'}
               onClick={() => setActiveTab('questions')}
             />
-          </div> */}
+          </div>
 
-          <div className="mt-auto pt-6 border-t border-white/10">
+          <div className="mt-auto pt-6 border-t border-[#1a1a1b]/5">
             <SidebarLink
               icon={<LogOut size={20} />}
               label="Log Out"
@@ -431,14 +431,14 @@ export const Dashboard = () => {
           </div>
         </nav>
 
-        <div className="border-t border-white/10 bg-black/20 p-6">
+        <div className="border-t border-[#1a1a1b]/5 bg-muted/30 p-6">
           <div className="flex items-center gap-3">
             <div className="bg-gradient-to-r from-[#D90655] to-[#FC3F39] shadow-primary/20 flex h-10 w-10 items-center justify-center rounded-full text-sm font-bold text-white shadow-lg">
               AD
             </div>
             <div className="flex flex-col overflow-hidden">
-              <span className="truncate text-sm font-bold">Admin User</span>
-              <span className="truncate text-xs text-white/50">
+              <span className="truncate text-sm font-bold text-[#1a1a1b]">Admin User</span>
+              <span className="truncate text-xs text-[#1a1a1b]/50">
                 admin@quizmaster.com
               </span>
             </div>
@@ -1020,7 +1020,7 @@ const SidebarLink = ({
     onClick={onClick}
     className={`group mx-2 flex cursor-pointer items-center gap-3 rounded-xl px-4 py-3 transition-all ${active
       ? 'bg-gradient-to-r from-[#D90655] to-[#FC3F39] shadow-primary/25 text-white shadow-lg'
-      : 'text-white/60 hover:bg-white/10 hover:text-white'
+      : 'text-[#1a1a1b]/60 hover:bg-[#1a1a1b]/5 hover:text-[#1a1a1b]'
       } `}
   >
     <div
@@ -1031,7 +1031,7 @@ const SidebarLink = ({
     <span className="text-sm font-semibold tracking-tight">{label}</span>
     {badge !== undefined && (
       <span
-        className={`ml-auto rounded-full px-2 py-0.5 text-[10px] font-bold ${active ? 'text-primary bg-white' : 'bg-white/10 text-white'}`}
+        className={`ml-auto rounded-full px-2 py-0.5 text-[10px] font-bold ${active ? 'text-primary bg-white' : 'bg-[#1a1a1b]/10 text-[#1a1a1b]'}`}
       >
         {badge}
       </span>
@@ -1041,7 +1041,7 @@ const SidebarLink = ({
 
 const SidebarHeader = ({ title }: { title: string }) => (
   <div className="mt-4 mb-2 px-6 py-2">
-    <h3 className="text-[10px] font-black tracking-widest text-white/30 uppercase">
+    <h3 className="text-[10px] font-black tracking-widest text-[#1a1a1b]/30 uppercase">
       {title}
     </h3>
   </div>
