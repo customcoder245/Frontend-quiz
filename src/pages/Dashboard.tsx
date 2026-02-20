@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { useTable, usePagination, useGlobalFilter } from 'react-table';
+import { useNavigate } from 'react-router-dom';
 // hello
 import {
   LayoutDashboard,
@@ -19,9 +20,10 @@ import {
   X,
   CreditCard,
   PieChart,
-  Bell,
   CheckSquare,
   Circle,
+  Settings,
+  LogOut,
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import {
@@ -52,9 +54,15 @@ interface Submission {
 }
 
 export const Dashboard = () => {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<
     'analytics' | 'submissions' | 'questions'
   >('analytics');
+
+  const handleLogout = () => {
+    // Logic to clear user session/token could go here
+    navigate('/login');
+  };
 
   // --- Questions CRUD State ---
   const [questions, setQuestions] = useState<Question[]>([
@@ -273,11 +281,11 @@ export const Dashboard = () => {
         questions.map((q) =>
           q.id === editingQuestion.id
             ? {
-                ...q,
-                text: newQuestionText,
-                options: optionsList,
-                type: newQuestionType,
-              }
+              ...q,
+              text: newQuestionText,
+              options: optionsList,
+              type: newQuestionType,
+            }
             : q
         )
       );
@@ -357,6 +365,14 @@ export const Dashboard = () => {
               onClick={() => setActiveTab('questions')}
             />
           </div> */}
+
+          <div className="mt-auto pt-6 border-t border-white/10">
+            <SidebarLink
+              icon={<LogOut size={20} />}
+              label="Log Out"
+              onClick={handleLogout}
+            />
+          </div>
         </nav>
 
         <div className="border-t border-white/10 bg-black/20 p-6">
@@ -396,14 +412,7 @@ export const Dashboard = () => {
                 className="bg-muted/50 focus:bg-background focus:ring-primary/20 w-64 rounded-full border-none py-2 pr-4 pl-10 text-sm transition-all outline-none focus:ring-2"
               />
             </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-muted-foreground relative h-10 w-10 rounded-full p-0"
-            >
-              <Bell size={20} />
-              <span className="bg-primary border-background absolute top-2 right-2 h-2 w-2 rounded-full border"></span>
-            </Button>
+            {/* Notification Bell Removed */}
           </div>
         </header>
 
@@ -755,11 +764,10 @@ export const Dashboard = () => {
                   {/* Single Choice Selection */}
                   <div
                     onClick={() => setNewQuestionType('single')}
-                    className={`flex cursor-pointer items-center gap-3 rounded-2xl border-2 p-4 transition-all ${
-                      newQuestionType === 'single'
-                        ? 'border-primary bg-primary/5'
-                        : 'bg-muted/50 hover:bg-muted border-transparent'
-                    }`}
+                    className={`flex cursor-pointer items-center gap-3 rounded-2xl border-2 p-4 transition-all ${newQuestionType === 'single'
+                      ? 'border-primary bg-primary/5'
+                      : 'bg-muted/50 hover:bg-muted border-transparent'
+                      }`}
                   >
                     <div
                       className={`flex h-5 w-5 items-center justify-center rounded-full border-2 ${newQuestionType === 'single' ? 'border-primary' : 'border-muted-foreground/30'}`}
@@ -787,11 +795,10 @@ export const Dashboard = () => {
                   {/* Multiple Choice Selection */}
                   <div
                     onClick={() => setNewQuestionType('multiple')}
-                    className={`flex cursor-pointer items-center gap-3 rounded-2xl border-2 p-4 transition-all ${
-                      newQuestionType === 'multiple'
-                        ? 'border-primary bg-primary/5'
-                        : 'bg-muted/50 hover:bg-muted border-transparent'
-                    }`}
+                    className={`flex cursor-pointer items-center gap-3 rounded-2xl border-2 p-4 transition-all ${newQuestionType === 'multiple'
+                      ? 'border-primary bg-primary/5'
+                      : 'bg-muted/50 hover:bg-muted border-transparent'
+                      }`}
                   >
                     <div
                       className={`flex h-5 w-5 items-center justify-center rounded-md border-2 ${newQuestionType === 'multiple' ? 'border-primary' : 'border-muted-foreground/30'}`}
@@ -881,11 +888,10 @@ const SidebarLink = ({
 }) => (
   <div
     onClick={onClick}
-    className={`group mx-2 flex cursor-pointer items-center gap-3 rounded-xl px-4 py-3 transition-all ${
-      active
-        ? 'bg-primary shadow-primary/25 text-white shadow-lg'
-        : 'text-white/60 hover:bg-white/10 hover:text-white'
-    } `}
+    className={`group mx-2 flex cursor-pointer items-center gap-3 rounded-xl px-4 py-3 transition-all ${active
+      ? 'bg-primary shadow-primary/25 text-white shadow-lg'
+      : 'text-white/60 hover:bg-white/10 hover:text-white'
+      } `}
   >
     <div
       className={`transition-transform duration-300 ${active ? 'scale-110' : 'group-hover:scale-110'}`}

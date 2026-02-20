@@ -1,10 +1,11 @@
 import { useNavigate } from 'react-router-dom';
-import { Star } from 'lucide-react';
+import { Star, Menu, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 export default function HomePage() {
     const navigate = useNavigate();
     const [isLoggedIn, setIsLoggedIn] = useState(false);
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
     useEffect(() => {
         const token = localStorage.getItem('token');
@@ -23,15 +24,15 @@ export default function HomePage() {
     return (
         /* Entire page locked to viewport height with no scroll */
         <div className="selection:bg-primary/20 flex h-screen flex-col overflow-hidden bg-white font-sans selection:text-primary-foreground">
-            
+
             {/* Header / Nav - UI preserved exactly as original */}
-            <div className="w-full px-8 py-4 shrink-0 ">
-                <header className="z-30 flex w-full items-center justify-between bg-white bg-opacity-30 backdrop-blur-lg px-8 py-4 rounded-full shadow-[4px_4px_10px_0px_rgba(0,0,0,0.05)]">
+            <div className="w-full px-4 md:px-8 py-4 shrink-0 transition-all duration-300">
+                <header className="z-30 flex w-full items-center justify-between bg-white bg-opacity-30 backdrop-blur-lg px-4 md:px-8 py-3 md:py-4 rounded-full shadow-[4px_4px_10px_0px_rgba(0,0,0,0.05)] transition-all duration-300">
                     <div className="flex items-center">
                         <img
                             src="/logo.png"
                             alt="The Mediterranean Diet"
-                            className="h-8 w-auto object-contain md:h-11"
+                            className="h-8 w-auto object-contain md:h-11 transition-all duration-300"
                         />
                     </div>
 
@@ -42,15 +43,58 @@ export default function HomePage() {
                             <a href="#" className="text-sm font-bold text-[#1a1a1b] transition-opacity hover:opacity-70">FAQ</a>
                             <a href="#" className="text-sm font-bold text-[#1a1a1b] transition-opacity hover:opacity-70">Contact us</a>
                         </nav>
-                        <button className="bg-primary hover:bg-primary/90 shadow-xl shadow-primary/20 h-[35px] min-w-[25px] rounded-full px-16 text-[14px] font-bold text-white transition-all active:scale-[0.98]" onClick={() => navigate('/login')}>Login</button>
+                        <button className="hidden md:block bg-primary hover:bg-primary/90 shadow-xl shadow-primary/20 h-[35px] min-w-[25px] rounded-full px-8 md:px-16 text-[14px] font-bold text-white transition-all active:scale-[0.98]" onClick={() => navigate('/login')}>Login</button>
+
+                        {/* Mobile Menu Toggle */}
+                        <button
+                            className="md:hidden p-2 text-[#1a1a1b] hover:bg-black/5 rounded-full transition-colors"
+                            onClick={() => setIsMobileMenuOpen(true)}
+                        >
+                            <Menu size={24} />
+                        </button>
                     </div>
                 </header>
             </div>
 
+            {/* Mobile Sidebar / Slider */}
+            <div className={`fixed inset-0 z-50 flex justify-end md:hidden transition-all duration-300 ${isMobileMenuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
+                {/* Backdrop */}
+                <div className="absolute inset-0 bg-black/20 backdrop-blur-sm" onClick={() => setIsMobileMenuOpen(false)} />
+
+                {/* Sidebar Panel */}
+                <div className={`relative w-[280px] h-full bg-white shadow-2xl flex flex-col p-6 transition-transform duration-300 ease-out ${isMobileMenuOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+                    <div className="flex items-center justify-between mb-8">
+                        <span className="text-xl font-black text-[#1a1a1b]">Menu</span>
+                        <button
+                            onClick={() => setIsMobileMenuOpen(false)}
+                            className="p-2 rounded-full hover:bg-black/5 transition-colors text-[#1a1a1b]"
+                        >
+                            <X size={24} />
+                        </button>
+                    </div>
+
+                    <nav className="flex flex-col space-y-6">
+                        <a href="#" className="text-lg font-bold text-[#1a1a1b] hover:text-primary transition-colors">Home</a>
+                        <a href="#" className="text-lg font-bold text-[#1a1a1b] hover:text-primary transition-colors">About us</a>
+                        <a href="#" className="text-lg font-bold text-[#1a1a1b] hover:text-primary transition-colors">FAQ</a>
+                        <a href="#" className="text-lg font-bold text-[#1a1a1b] hover:text-primary transition-colors">Contact us</a>
+                    </nav>
+
+                    <div className="mt-auto pt-8 border-t border-black/5">
+                        <button
+                            className="w-full bg-primary hover:bg-primary/90 shadow-xl shadow-primary/20 h-[50px] rounded-full text-[16px] font-bold text-white transition-all active:scale-[0.98]"
+                            onClick={() => navigate('/login')}
+                        >
+                            Login
+                        </button>
+                    </div>
+                </div>
+            </div>
+
             {/* Main Hero Section */}
             <main className="relative flex flex-1 items-center overflow-hidden">
-                {/* Background Hero Image - Now using 100% Tailwind classes */}
-                <div className="absolute pointer-events-none hidden lg:block -z-0 w-[2417px] h-[2478px] -top-[849px] -right-[450px]">
+                {/* Background Hero Image - Responsive: hidden on mobile, scaled on tablet, full on desktop */}
+                <div className="absolute pointer-events-none hidden md:block -z-0 md:w-[800px] md:h-[800px] md:-top-[150px] md:-right-[200px] lg:w-[2417px] lg:h-[2478px] lg:-top-[849px] lg:-right-[450px] transition-all duration-500 ease-in-out">
                     <img
                         src="/hero-meals.png"
                         alt=""
