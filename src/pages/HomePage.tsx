@@ -140,7 +140,7 @@ export default function HomePage() {
                             </div>
 
                             <div className="flex flex-col sm:flex-row gap-5 pt-4">
-                                <button
+                                {/* <button
                                     className="h-[56px] sm:w-[196px] rounded-[50px] bg-white border-2 border-[#f4f4f5] text-[18px] font-bold text-[#1a1a1b] transition-all hover:bg-[#f4f4f5] active:scale-[0.98] flex items-center justify-center gap-2"
                                     onClick={() => navigate('/quiz')}
                                 >
@@ -151,7 +151,7 @@ export default function HomePage() {
                                     onClick={() => navigate('/quiz')}
                                 >
                                     <span>✉️</span> Mail
-                                </button>
+                                </button> */}
                             </div>
                         </div>
 
