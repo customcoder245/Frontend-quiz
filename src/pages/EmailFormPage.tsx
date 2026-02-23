@@ -1,14 +1,62 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import { ShieldCheck, CheckCircle2, Lock } from 'lucide-react';
+import { ShieldCheck, CheckCircle2, Lock, Loader2 } from 'lucide-react';
 
 export default function EmailFormPage() {
     const navigate = useNavigate();
+    const [name, setName] = useState('');
+    const [email, setEmail] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+
+    const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api/v1';
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setIsLoading(true);
+        setError(null);
+
+        try {
+            const quizResponses = JSON.parse(sessionStorage.getItem('quizResponses') || '[]');
+            const quizGender = sessionStorage.getItem('quizGender') || 'both';
+
+            const response = await fetch(`${API_BASE_URL}/questions/submit`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    email,
+                    firstName: name,
+                    responses: quizResponses,
+                    gender: quizGender
+                })
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.message || 'Submission failed');
+            }
+
+            // Note: We don't necessarily need to store a token here 
+            // since the results page is accessible via the flow.
+            // But we can store the user info if needed for the results page.
+            if (data.userResponse && data.userResponse.userId) {
+                localStorage.setItem('user', JSON.stringify({ email, firstName: name }));
+            }
+
+            navigate('/calculating');
+        } catch (err: any) {
+            setError(err.message || 'Something went wrong');
+            console.error('Quiz submission error:', err);
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     return (
         <div className="min-h-screen bg-white font-sans flex flex-col">
-            {/* Header */}
             <header className="px-6 py-6 flex items-center justify-between border-b border-[#1a1a1b]/5">
                 <div className="flex items-center cursor-pointer" onClick={() => navigate('/')}>
                     <img src="/logo.png" alt="The Mediterranean Diet" className="h-8 md:h-10 w-auto object-contain" />
@@ -31,17 +79,27 @@ export default function EmailFormPage() {
                     Enter your name and email to <br /> view the results
                 </h2>
 
-                <form className="w-full space-y-4 mb-8" onSubmit={(e) => { e.preventDefault(); navigate('/calculating'); }}>
+                {error && (
+                    <div className="mb-6 p-4 bg-red-50 text-red-600 rounded-2xl border border-red-100 font-bold">
+                        {error}
+                    </div>
+                )}
+
+                <form className="w-full space-y-4 mb-8" onSubmit={handleSubmit}>
                     <Input
                         placeholder="Name"
                         className="h-16 rounded-2xl border-2 border-[#1a1a1b]/5 bg-white px-6 text-lg font-bold placeholder:text-[#1a1a1b]/20"
                         required
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
                     />
                     <Input
                         placeholder="email@email.com"
                         type="email"
                         className="h-16 rounded-2xl border-2 border-[#1a1a1b]/5 bg-white px-6 text-lg font-bold placeholder:text-[#1a1a1b]/20"
                         required
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
                     />
 
                     <div className="bg-[#34a853]/5 border-2 border-[#34a853]/10 rounded-[24px] p-6 flex items-start space-x-4 mt-8">
@@ -56,8 +114,9 @@ export default function EmailFormPage() {
                     <Button
                         className="w-full h-16 text-xl font-black rounded-full shadow-lg shadow-[#D90655]/20 mt-8"
                         type="submit"
+                        disabled={isLoading}
                     >
-                        Continue
+                        {isLoading ? <Loader2 className="animate-spin" /> : 'Continue'}
                     </Button>
                 </form>
 
