@@ -23,6 +23,12 @@ export default function QuizPage() {
     const [searchParams] = useSearchParams();
     const gender = searchParams.get('gender') || 'both';
 
+    const constructSrcDoc = (html: string, css?: string, js?: string) => {
+        if (!html) return `<html><body style="margin:0;display:flex;align-items:center;justify-content:center;height:100vh;background:#fafafa;color:#ccc;font-family:sans-serif;"><h1 style="font-size:10vw;font-weight:900;margin:0;">PREVIEW</h1></body></html>`;
+        if (html.toLowerCase().includes('<html') || html.toLowerCase().includes('<!doctype')) return html;
+        return `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><style>body{margin:0;font-family:sans-serif;}${css || ''}</style></head><body>${html}<script>${js || ''}</script></body></html>`;
+    };
+
     const [questions, setQuestions] = useState<Question[]>([]);
     const [currentIndex, setCurrentIndex] = useState(0);
     const [loading, setLoading] = useState(true);
@@ -50,39 +56,6 @@ export default function QuizPage() {
         fetchQuestions();
     }, [gender, API_BASE_URL]);
 
-    // Handle Custom CSS and JS for Breakpoints
-    useEffect(() => {
-        const currentQuestion = questions[currentIndex];
-        if (currentQuestion?.type === 'breakpoint') {
-            // Inject CSS
-            if (currentQuestion.customCss) {
-                const styleId = `custom-css-${currentQuestion._id}`;
-                if (!document.getElementById(styleId)) {
-                    const style = document.createElement('style');
-                    style.id = styleId;
-                    style.innerHTML = currentQuestion.customCss;
-                    document.head.appendChild(style);
-                }
-            }
-
-            // Execute JS
-            if (currentQuestion.customJs) {
-                try {
-                    // eslint-disable-next-line no-new-func
-                    const runScript = new Function(currentQuestion.customJs);
-                    runScript();
-                } catch (err) {
-                    console.error('Error in Breakpoint JS:', err);
-                }
-            }
-        }
-
-        return () => {
-            // Optional: Cleanup CSS if needed
-            // const styleId = `custom-css-${currentQuestion?._id}`;
-            // document.getElementById(styleId)?.remove();
-        };
-    }, [currentIndex, questions]);
 
     const handleNext = () => {
         const currentQuestion = questions[currentIndex];
@@ -224,10 +197,14 @@ export default function QuizPage() {
                 <div className="w-full space-y-4">
                     {currentQuestion.type === 'breakpoint' ? (
                         <div className="w-full animate-in fade-in slide-in-from-bottom-4 duration-700">
-                            <div
-                                className="breakpoint-container"
-                                dangerouslySetInnerHTML={{ __html: currentQuestion.customHtml || '' }}
-                            />
+                            <div className="w-full bg-white rounded-3xl overflow-hidden shadow-2xl border border-[#f4f4f5] h-[650px] relative">
+                                <iframe
+                                    srcDoc={constructSrcDoc(currentQuestion.customHtml || '', currentQuestion.customCss, currentQuestion.customJs)}
+                                    className="w-full h-full border-none"
+                                    sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
+                                    title="Breakpoint"
+                                />
+                            </div>
                             <div className="mt-12 flex justify-center">
                                 <button
                                     onClick={handleNext}

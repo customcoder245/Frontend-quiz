@@ -23,7 +23,6 @@ import {
   Smartphone,
   Tablet,
   Monitor,
-  Maximize,
   LogOut,
   Menu,
   Settings,
@@ -70,20 +69,24 @@ interface Submission {
 
 export const Dashboard = () => {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<
-    'analytics' | 'submissions' | 'questions'
-  >('analytics');
+  // --- Data State ---
+  const [questions, setQuestions] = useState<Question[]>([]);
+  const [submissions, setSubmissions] = useState<Submission[]>([]);
+  const [loadingQuestions, setLoadingQuestions] = useState(false);
+  const [loadingSubmissions, setLoadingSubmissions] = useState(false);
+  const [isAddingQuestion, setIsAddingQuestion] = useState(false);
+  const [editingQuestion, setEditingQuestion] = useState<Question | null>(null);
+  const [activeTab, setActiveTab] = useState<'analytics' | 'submissions' | 'questions'>('analytics');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [selectedSubmission, setSelectedSubmission] = useState<Submission | null>(
-    null
-  );
+  const [selectedSubmission, setSelectedSubmission] = useState<Submission | null>(null);
   const [isSubmissionModalOpen, setIsSubmissionModalOpen] = useState(false);
+  const [isAddDropdownOpen, setIsAddDropdownOpen] = useState(false);
+  const [insertAfterOrderId, setInsertAfterOrderId] = useState<string>('last');
+  const [isSourceMode, setIsSourceMode] = useState(false);
+  const [previewSize, setPreviewSize] = useState<'mobile' | 'tablet' | 'desktop'>('mobile');
+  const [isEnlargedPreviewOpen, setIsEnlargedPreviewOpen] = useState(false);
 
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    navigate('/login');
-  };
+  const submissionData = useMemo<Submission[]>(() => submissions, [submissions]);
 
   const API_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api/v1';
 
@@ -95,45 +98,33 @@ export const Dashboard = () => {
     };
   };
 
-  const handleExportCSV = () => {
-    // Define headers
-    const headers = ['ID', 'Name', 'Email', 'Phone', 'Gender', 'Question', 'Selected Option', 'Date'];
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    navigate('/login');
+  };
 
-    // Map data to rows
+  const handleExportCSV = () => {
+    const headers = ['ID', 'Name', 'Email', 'Phone', 'Gender', 'Question', 'Selected Option', 'Date'];
     const rows = submissionData.map((sub) => [
       sub.id,
       sub.name,
       sub.email,
       sub.phone,
       sub.gender,
-      `"${sub.questions.replace(/"/g, '""')}"`,
-      `"${sub.selectedOptions.replace(/"/g, '""')}"`,
+      `"${sub.questions?.replace(/"/g, '""') || ''}"`,
+      `"${sub.selectedOptions?.replace(/"/g, '""') || ''}"`,
       sub.date,
     ]);
 
-    // Combine headers and rows
-    const csvContent = [
-      headers.join(','),
-      ...rows.map((row) => row.join(',')),
-    ].join('\n');
-
-    // Create download link
+    const csvContent = [headers.join(','), ...rows.map((row) => row.join(','))].join('\n');
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.setAttribute('href', url);
     link.setAttribute('download', `submissions_${new Date().toISOString().split('T')[0]}.csv`);
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
     link.click();
-    document.body.removeChild(link);
   };
-
-  // --- Questions CRUD State ---
-  const [questions, setQuestions] = useState<Question[]>([]);
-  const [loadingQuestions, setLoadingQuestions] = useState(false);
-  const [isAddingQuestion, setIsAddingQuestion] = useState(false);
-  const [editingQuestion, setEditingQuestion] = useState<Question | null>(null);
 
   // --- Form State ---
   const [newQuestionText, setNewQuestionText] = useState('');
@@ -146,22 +137,43 @@ export const Dashboard = () => {
   const [newCustomHtml, setNewCustomHtml] = useState('');
   const [newCustomCss, setNewCustomCss] = useState('');
   const [newCustomJs, setNewCustomJs] = useState('');
-  const [isAddDropdownOpen, setIsAddDropdownOpen] = useState(false);
-  const [insertAfterOrderId, setInsertAfterOrderId] = useState<string>('last');
-  const [activeCodeTab, setActiveCodeTab] = useState<'visual' | 'advanced'>('visual');
-  const [previewSize, setPreviewSize] = useState<'mobile' | 'tablet' | 'desktop'>('mobile');
-  const [isEnlargedPreviewOpen, setIsEnlargedPreviewOpen] = useState(false);
+
+  const constructSrcDoc = (html: string, css?: string, js?: string) => {
+    if (!html) return `<html><body style="margin:0;display:flex;align-items:center;justify-content:center;height:100vh;background:white;color:#eee;font-family:sans-serif;"><h1 style="font-size:10vw;font-weight:900;margin:0;">PREVIEW</h1></body></html>`;
+    if (html.toLowerCase().includes('<html') || html.toLowerCase().includes('<!doctype')) return html;
+    return `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><style>body{margin:0;font-family:sans-serif;}${css || ''}</style></head><body>${html}<script>${js || ''}</script></body></html>`;
+  };
+
 
   React.useEffect(() => {
     if (activeTab === 'questions') {
       fetchQuestions();
+    } else if (activeTab === 'submissions') {
+      fetchSubmissions();
     }
   }, [activeTab]);
+
+  const fetchSubmissions = async () => {
+    setLoadingSubmissions(true);
+    try {
+      const resp = await fetch(`${API_URL}/questions/submissions`, {
+        headers: getHeaders(),
+      });
+      if (resp.ok) {
+        const data = await resp.json();
+        setSubmissions(data.submissions || []);
+      }
+    } catch (err) {
+      console.error('Failed to fetch submissions:', err);
+    } finally {
+      setLoadingSubmissions(false);
+    }
+  };
 
   const fetchQuestions = async () => {
     setLoadingQuestions(true);
     try {
-      const resp = await fetch(`${API_URL}/questions`, {
+      const resp = await fetch(`${API_URL}/questions?includeInactive=true`, {
         headers: getHeaders(),
       });
       if (resp.ok) {
@@ -184,92 +196,6 @@ export const Dashboard = () => {
     }
   };
 
-  // --- Submission Data ---
-  const submissionData = useMemo<Submission[]>(
-    () => [
-      {
-        id: 'S1',
-        name: 'John Doe',
-        email: 'john@example.com',
-        phone: '+1234567890',
-        gender: 'Male',
-        questions: 'How familiar are you with the Mediterranean Diet?',
-        selectedOptions: 'I know it pretty well',
-        date: '2026-02-18',
-      },
-      {
-        id: 'S2',
-        name: 'Jane Smith',
-        email: 'jane@example.com',
-        phone: '+1987654321',
-        gender: 'Female',
-        questions: 'What is your main goal right now?',
-        selectedOptions: 'Improve my health',
-        date: '2026-02-18',
-      },
-      {
-        id: 'S3',
-        name: 'David Lee',
-        email: 'david@example.com',
-        phone: '+1122334455',
-        gender: 'Male',
-        questions: 'What is your goal weight?',
-        selectedOptions: '160 lbs',
-        date: '2026-02-17',
-      },
-      {
-        id: 'S4',
-        name: 'Alice Brown',
-        email: 'alice@example.com',
-        phone: '+1444556677',
-        gender: 'Female',
-        questions: 'What is your main goal right now?',
-        selectedOptions: 'Feel more confident',
-        date: '2026-02-17',
-      },
-      {
-        id: 'S5',
-        name: 'Robert White',
-        email: 'robert@example.com',
-        phone: '+1555443322',
-        gender: 'Male',
-        questions: 'How familiar are you with the Mediterranean Diet?',
-        selectedOptions: 'I’ve tried it before',
-        date: '2026-02-16',
-      },
-      {
-        id: 'S6',
-        name: 'Lucy Green',
-        email: 'lucy@example.com',
-        phone: '+1230987654',
-        gender: 'Female',
-        questions: 'Stubborn weight gain symptoms?',
-        selectedOptions: '⚖️ Stubborn weight gain',
-        date: '2026-02-16',
-      },
-      {
-        id: 'S7',
-        name: 'Ethan Hunt',
-        email: 'ethan@imf.org',
-        phone: '+1000000000',
-        gender: 'Male',
-        questions: 'What is your goal weight?',
-        selectedOptions: '170+ lbs',
-        date: '2026-02-15',
-      },
-      {
-        id: 'S8',
-        name: 'Sarah Connor',
-        email: 'sarah@resistance.com',
-        phone: '+1999888777',
-        gender: 'Female',
-        questions: 'What is your main goal right now?',
-        selectedOptions: 'Save time on meal prep',
-        date: '2026-02-15',
-      },
-    ],
-    []
-  );
 
   // --- Submissions Table Config ---
   const columns = useMemo(
@@ -439,7 +365,6 @@ export const Dashboard = () => {
     setNewCustomHtml('');
     setNewCustomCss('');
     setNewCustomJs('');
-    setActiveCodeTab('visual');
   };
 
   const handleDeleteQuestion = async (id: string) => {
@@ -787,80 +712,88 @@ export const Dashboard = () => {
                 </Button>
               </div>
 
-              <div className="overflow-x-auto">
-                <table {...getTableProps()} className="w-full text-left">
-                  <thead className="bg-muted/30">
-                    {headerGroups.map((hg: any) => (
-                      <tr
-                        {...hg.getHeaderGroupProps()}
-                        key={hg.id}
-                        className="border-b"
-                      >
-                        {hg.headers.map((col: any) => (
-                          <th
-                            {...col.getHeaderProps()}
-                            key={col.id}
-                            className="text-muted-foreground px-8 py-5 text-xs font-bold tracking-widest uppercase"
+              {loadingSubmissions ? (
+                <div className="flex h-64 items-center justify-center">
+                  <div className="border-primary h-8 w-8 animate-spin rounded-full border-4 border-t-transparent" />
+                </div>
+              ) : (
+                <>
+                  <div className="overflow-x-auto">
+                    <table {...getTableProps()} className="w-full text-left">
+                      <thead className="bg-muted/30">
+                        {headerGroups.map((hg: any) => (
+                          <tr
+                            {...hg.getHeaderGroupProps()}
+                            key={hg.id}
+                            className="border-b"
                           >
-                            {col.render('Header')}
-                          </th>
+                            {hg.headers.map((col: any) => (
+                              <th
+                                {...col.getHeaderProps()}
+                                key={col.id}
+                                className="text-muted-foreground px-8 py-5 text-xs font-bold tracking-widest uppercase"
+                              >
+                                {col.render('Header')}
+                              </th>
+                            ))}
+                          </tr>
                         ))}
-                      </tr>
-                    ))}
-                  </thead>
-                  <tbody {...getTableBodyProps()}>
-                    {page.map((row: any) => {
-                      prepareRow(row);
-                      return (
-                        <tr
-                          {...row.getRowProps()}
-                          key={row.id}
-                          className="hover:bg-muted/10 group border-b transition-colors last:border-0"
-                        >
-                          {row.cells.map((cell: any) => (
-                            <td
-                              {...cell.getCellProps()}
-                              key={cell.column.id}
-                              className="px-8 py-5 text-sm"
+                      </thead>
+                      <tbody {...getTableBodyProps()}>
+                        {page.map((row: any) => {
+                          prepareRow(row);
+                          return (
+                            <tr
+                              {...row.getRowProps()}
+                              key={row.id}
+                              className="hover:bg-muted/10 group border-b transition-colors last:border-0"
                             >
-                              {cell.render('Cell')}
-                            </td>
-                          ))}
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
+                              {row.cells.map((cell: any) => (
+                                <td
+                                  {...cell.getCellProps()}
+                                  key={cell.column.id}
+                                  className="px-8 py-5 text-sm"
+                                >
+                                  {cell.render('Cell')}
+                                </td>
+                              ))}
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
 
-              <div className="bg-muted/20 flex items-center justify-between border-t p-6">
-                <div className="text-muted-foreground text-xs font-medium">
-                  Showing {page.length} of {submissionData.length} records
-                </div>
-                <div className="flex items-center gap-2">
-                  <Button
-                    onClick={previousPage}
-                    disabled={!canPreviousPage}
-                    variant="outline"
-                    size="sm"
-                    className="h-8 w-8 rounded-full p-0"
-                  >
-                    <ChevronRight className="h-4 w-4 rotate-180" />
-                  </Button>
-                  <span className="px-4 text-sm font-medium">
-                    Page {pageIndex + 1} of {pageCount}
-                  </span>
-                  <Button
-                    onClick={nextPage}
-                    disabled={!canNextPage}
-                    variant="outline"
-                    size="sm"
-                    className="h-8 w-8 rounded-full p-0"
-                  >
-                    <ChevronRight className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
+                  <div className="bg-muted/20 flex items-center justify-between border-t p-6">
+                    <div className="text-muted-foreground text-xs font-medium">
+                      Showing {page.length} of {submissionData.length} records
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        onClick={previousPage}
+                        disabled={!canPreviousPage}
+                        variant="outline"
+                        size="sm"
+                        className="h-8 w-8 rounded-full p-0"
+                      >
+                        <ChevronRight className="h-4 w-4 rotate-180" />
+                      </Button>
+                      <span className="px-4 text-sm font-medium">
+                        Page {pageIndex + 1} of {pageCount}
+                      </span>
+                      <Button
+                        onClick={nextPage}
+                        disabled={!canNextPage}
+                        variant="outline"
+                        size="sm"
+                        className="h-8 w-8 rounded-full p-0"
+                      >
+                        <ChevronRight className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </>
+              )}
             </Card>
           )}
 
@@ -1051,238 +984,185 @@ export const Dashboard = () => {
 
       {/* --- Add/Edit Question Modal --- */}
       {isAddingQuestion && (
-        <div className="animate-in fade-in fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm duration-200">
-          <Card className="max-h-[90vh] w-full max-w-2xl overflow-hidden overflow-y-auto rounded-[32px] border-none shadow-2xl">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <div>
-                <CardTitle>
-                  {editingQuestion ? 'Edit Question' : 'Create Question'}
-                </CardTitle>
-                <CardDescription>
-                  Configure the query and available options.
-                </CardDescription>
+        <div className="animate-in fade-in fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 md:p-8 backdrop-blur-md duration-300">
+          <Card className="h-full w-full max-w-[1400px] overflow-hidden rounded-[40px] border-none shadow-[0_0_100px_-20px_rgba(0,0,0,0.5)] flex flex-col bg-white">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 px-10 py-8 border-b border-[#1a1a1b]/5 bg-[#fcfcfc]">
+              <div className="flex items-center gap-6">
+                <div className="h-14 w-14 rounded-2xl bg-primary/10 text-primary flex items-center justify-center">
+                  {editingQuestion ? <Edit2 size={24} /> : <Plus size={24} />}
+                </div>
+                <div>
+                  <CardTitle className="text-2xl font-black tracking-tight">
+                    {editingQuestion ? 'Edit Quiz Item' : 'Create New Item'}
+                  </CardTitle>
+                  <CardDescription className="text-sm font-medium">
+                    Customize your question or breakpoint properties below.
+                  </CardDescription>
+                </div>
               </div>
               <Button
                 onClick={closeModal}
                 variant="ghost"
                 size="sm"
-                className="h-8 w-8 rounded-full p-0"
+                className="h-12 w-12 rounded-full p-0 hover:bg-black/5 hover:rotate-90 transition-all duration-300"
               >
-                <X size={18} />
+                <X size={24} />
               </Button>
             </CardHeader>
-            <CardContent className="space-y-6 pt-6 custom-scrollbar">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                <div className="space-y-3">
-                  <label className="text-muted-foreground pl-1 text-[10px] font-bold tracking-widest uppercase">
-                    Order
-                  </label>
-                  <input
-                    type="number"
-                    value={newQuestionOrder}
-                    onChange={(e) => setNewQuestionOrder(parseInt(e.target.value))}
-                    readOnly={true}
-                    className="bg-gray-100 opacity-60 cursor-not-allowed w-full rounded-xl border-2 border-transparent px-5 py-3 text-base font-bold transition-all outline-none"
-                  />
-                </div>
-                <div className="space-y-3">
-                  <label className="text-muted-foreground pl-1 text-[10px] font-bold tracking-widest uppercase">
-                    Insert After
-                  </label>
-                  <select
-                    value={insertAfterOrderId}
-                    onChange={(e) => setInsertAfterOrderId(e.target.value)}
-                    disabled={!!editingQuestion}
-                    className={`bg-muted/50 focus:bg-background focus:border-primary/20 w-full rounded-xl border-2 border-transparent px-5 py-3 text-sm font-bold transition-all outline-none appearance-none ${editingQuestion ? 'opacity-50 cursor-not-allowed' : ''}`}
-                  >
-                    <option value="last">At the end (Default)</option>
-                    <option value="start">At the beginning</option>
-                    {questions.map((q, idx) => (
-                      <option key={q._id} value={q._id}>
-                        After Q{idx + 1}: {q.questionText.substring(0, 30)}...
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className="space-y-3">
-                  <label className="text-muted-foreground pl-1 text-[10px] font-bold tracking-widest uppercase">
-                    Gender Target
-                  </label>
-                  <select
-                    value={newQuestionGender}
-                    onChange={(e) => setNewQuestionGender(e.target.value as any)}
-                    className="bg-muted/50 focus:bg-background focus:border-primary/20 w-full rounded-xl border-2 border-transparent px-5 py-3 text-base font-bold transition-all outline-none appearance-none"
-                  >
-                    <option value="both">Both</option>
-                    <option value="male">Male</option>
-                    <option value="female">Female</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="space-y-3">
-                <label className="text-muted-foreground pl-1 text-[10px] font-bold tracking-widest uppercase">
-                  Question Text
-                </label>
-                <textarea
-                  value={newQuestionText}
-                  onChange={(e) => setNewQuestionText(e.target.value)}
-                  placeholder="e.g., How familiar are you with..."
-                  className="bg-muted/50 focus:bg-background focus:border-primary/20 placeholder:text-muted-foreground/50 w-full h-24 resize-none rounded-xl border-2 border-transparent px-5 py-4 text-base font-medium transition-all outline-none"
-                  autoFocus
-                />
-              </div>
-
-              <div className="space-y-4">
-                <label className="text-muted-foreground pl-1 text-[10px] font-bold tracking-widest uppercase">
-                  Response Type
-                </label>
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-                  {[
-                    { id: 'single-select', label: 'Single', icon: <Circle size={14} /> },
-                    { id: 'multi-select', label: 'Multiple', icon: <CheckSquare size={14} /> },
-                    { id: 'text-input', label: 'Text', icon: <Edit2 size={14} /> },
-                    { id: 'number-input', label: 'Number', icon: <TrendingUp size={14} /> },
-                    { id: 'breakpoint', label: 'Breakpoint', icon: <X size={14} className="rotate-45" /> },
-                  ].map((t) => (
-                    <div
-                      key={t.id}
-                      onClick={() => setNewQuestionType(t.id as any)}
-                      className={`flex cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border-2 p-3 transition-all ${newQuestionType === t.id
-                        ? 'border-primary bg-primary/5'
-                        : 'bg-muted/50 hover:bg-muted border-transparent'
-                        }`}
-                    >
-                      <div className={`${newQuestionType === t.id ? 'text-primary' : 'text-muted-foreground/40'}`}>
-                        {t.icon}
-                      </div>
-                      <p className={`text-[10px] font-black uppercase ${newQuestionType === t.id ? 'text-primary' : 'text-muted-foreground'}`}>
-                        {t.label}
-                      </p>
+            <CardContent className="flex-1 overflow-y-auto p-0 flex flex-col custom-scrollbar">
+              <div className="flex-1 grid grid-cols-1 xl:grid-cols-[1fr_500px] h-full">
+                {/* Left Side: Configuration */}
+                <div className="p-10 space-y-10 border-r border-[#1a1a1b]/5">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                    <div className="space-y-3">
+                      <label className="text-muted-foreground pl-1 text-[10px] font-black tracking-widest uppercase">
+                        Step Order
+                      </label>
+                      <input
+                        type="number"
+                        value={newQuestionOrder}
+                        onChange={(e) => setNewQuestionOrder(parseInt(e.target.value))}
+                        readOnly={true}
+                        className="bg-gray-100 opacity-60 cursor-not-allowed w-full rounded-2xl border-none px-6 py-4 text-base font-black transition-all outline-none"
+                      />
                     </div>
-                  ))}
-                </div>
-              </div>
+                    <div className="space-y-3">
+                      <label className="text-muted-foreground pl-1 text-[10px] font-black tracking-widest uppercase">
+                        Insert Position
+                      </label>
+                      <div className="relative">
+                        <select
+                          value={insertAfterOrderId}
+                          onChange={(e) => setInsertAfterOrderId(e.target.value)}
+                          disabled={!!editingQuestion}
+                          className={`bg-muted/50 focus:bg-background focus:border-primary/20 w-full rounded-2xl border-none px-6 py-4 text-sm font-black transition-all outline-none appearance-none ${editingQuestion ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        >
+                          <option value="last">At the end</option>
+                          <option value="start">At the beginning</option>
+                          {questions.map((q, idx) => (
+                            <option key={q._id} value={q._id}>
+                              After Q{idx + 1}
+                            </option>
+                          ))}
+                        </select>
+                        <ChevronRight className="absolute right-4 top-1/2 -translate-y-1/2 rotate-90 text-muted-foreground pointer-events-none" size={16} />
+                      </div>
+                    </div>
+                    <div className="space-y-3">
+                      <label className="text-muted-foreground pl-1 text-[10px] font-black tracking-widest uppercase">
+                        Gender Target
+                      </label>
+                      <div className="relative">
+                        <select
+                          value={newQuestionGender}
+                          onChange={(e) => setNewQuestionGender(e.target.value as any)}
+                          className="bg-muted/50 focus:bg-background focus:border-primary/20 w-full rounded-2xl border-none px-6 py-4 text-sm font-black transition-all outline-none appearance-none"
+                        >
+                          <option value="both">Both Genders</option>
+                          <option value="male">Male Only</option>
+                          <option value="female">Female Only</option>
+                        </select>
+                        <ChevronRight className="absolute right-4 top-1/2 -translate-y-1/2 rotate-90 text-muted-foreground pointer-events-none" size={16} />
+                      </div>
+                    </div>
+                  </div>
 
-              <div className="flex flex-wrap gap-6 border-y py-6 border-[#1a1a1b]/5">
-                <div className="flex items-center gap-3">
-                  <button
-                    onClick={() => setNewQuestionIsPopup(!newQuestionIsPopup)}
-                    className={`h-6 w-11 rounded-full transition-colors relative ${newQuestionIsPopup ? 'bg-primary' : 'bg-gray-200'}`}
-                  >
-                    <div className={`absolute top-1 left-1 bg-white h-4 w-4 rounded-full transition-transform ${newQuestionIsPopup ? 'translate-x-5' : 'translate-x-0'}`} />
-                  </button>
-                  <span className="text-sm font-bold text-foreground">Popup Question</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <button
-                    onClick={() => setNewQuestionIsActive(!newQuestionIsActive)}
-                    className={`h-6 w-11 rounded-full transition-colors relative ${newQuestionIsActive ? 'bg-green-500' : 'bg-gray-200'}`}
-                  >
-                    <div className={`absolute top-1 left-1 bg-white h-4 w-4 rounded-full transition-transform ${newQuestionIsActive ? 'translate-x-5' : 'translate-x-0'}`} />
-                  </button>
-                  <span className="text-sm font-bold text-foreground">Active Status</span>
-                </div>
-              </div>
-
-              {(newQuestionType === 'single-select' || newQuestionType === 'multi-select') && (
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <label className="text-muted-foreground pl-1 text-[10px] font-bold tracking-widest uppercase">
-                      Answer Options
+                  <div className="space-y-3">
+                    <label className="text-muted-foreground pl-1 text-[10px] font-black tracking-widest uppercase">
+                      Admin Label / Question Text
                     </label>
-                    <Button
-                      onClick={handleAddOption}
-                      variant="ghost"
-                      size="sm"
-                      className="h-8 rounded-full text-xs font-bold text-primary hover:bg-primary/5"
-                    >
-                      <Plus size={14} className="mr-1" /> Add Option
-                    </Button>
+                    <textarea
+                      value={newQuestionText}
+                      onChange={(e) => setNewQuestionText(e.target.value)}
+                      placeholder="Identify this item in your list..."
+                      className="bg-muted/30 focus:bg-background focus:ring-2 focus:ring-primary/10 placeholder:text-muted-foreground/50 w-full h-24 resize-none rounded-2xl border-none px-6 py-4 text-lg font-bold transition-all outline-none"
+                    />
                   </div>
 
-                  <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
-                    {newQuestionOptions.map((opt, idx) => (
-                      <div key={idx} className="flex gap-3 group">
-                        <input
-                          type="text"
-                          value={opt.emoji}
-                          onChange={(e) => handleUpdateOption(idx, 'emoji', e.target.value)}
-                          placeholder="Emoji"
-                          className="bg-muted/50 focus:bg-background w-16 rounded-xl border-2 border-transparent px-3 py-3 text-center text-lg transition-all outline-none"
-                        />
-                        <input
-                          type="text"
-                          value={opt.text}
-                          onChange={(e) => handleUpdateOption(idx, 'text', e.target.value)}
-                          placeholder={`Option ${idx + 1} text`}
-                          className="bg-muted/50 focus:bg-background flex-1 rounded-xl border-2 border-transparent px-5 py-3 text-sm font-bold transition-all outline-none"
-                        />
-                        <Button
-                          onClick={() => handleRemoveOption(idx)}
-                          variant="ghost"
-                          size="sm"
-                          className="h-11 w-11 rounded-xl p-0 text-red-400 hover:bg-red-50 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity"
+                  <div className="space-y-4">
+                    <label className="text-muted-foreground pl-1 text-[10px] font-black tracking-widest uppercase">
+                      Content Type
+                    </label>
+                    <div className="grid grid-cols-5 gap-3">
+                      {[
+                        { id: 'single-select', label: 'Single', icon: <Circle size={18} /> },
+                        { id: 'multi-select', label: 'Multiple', icon: <CheckSquare size={18} /> },
+                        { id: 'text-input', label: 'Text', icon: <Edit2 size={18} /> },
+                        { id: 'number-input', label: 'Number', icon: <TrendingUp size={18} /> },
+                        { id: 'breakpoint', label: 'Breakpoint', icon: <X size={20} className="rotate-45" /> },
+                      ].map((t) => (
+                        <div
+                          key={t.id}
+                          onClick={() => setNewQuestionType(t.id as any)}
+                          className={`flex cursor-pointer flex-col items-center justify-center gap-3 rounded-[24px] border-2 h-24 transition-all ${newQuestionType === t.id
+                            ? 'border-primary bg-primary/5 shadow-inner scale-[0.98]'
+                            : 'bg-muted/20 hover:bg-muted border-transparent'
+                            }`}
                         >
-                          <Trash2 size={16} />
-                        </Button>
-                      </div>
-                    ))}
-                    {newQuestionOptions.length === 0 && (
-                      <div className="p-8 border-2 border-dashed rounded-2xl text-center">
-                        <p className="text-muted-foreground text-xs">No options added yet.</p>
-                      </div>
-                    )}
+                          <div className={`${newQuestionType === t.id ? 'text-primary' : 'text-muted-foreground/30'}`}>
+                            {t.icon}
+                          </div>
+                          <p className={`text-[11px] font-black uppercase tracking-widest ${newQuestionType === t.id ? 'text-primary' : 'text-muted-foreground/60'}`}>
+                            {t.label}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              )}
 
-              {newQuestionType === 'breakpoint' && (
-                <div className="space-y-8 animate-in slide-in-from-top-6 duration-500 ease-out">
-                  <div className="flex items-center justify-between pb-2 border-b border-[#1a1a1b]/5">
-                    <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-2xl bg-orange-500/10 text-orange-600 flex items-center justify-center shadow-inner">
-                        <X size={20} className="rotate-45" />
+                  <div className="flex gap-10 items-center p-8 bg-muted/20 rounded-[32px] border border-[#1a1a1b]/5">
+                    <div className="flex items-center gap-4">
+                      <button
+                        onClick={() => setNewQuestionIsPopup(!newQuestionIsPopup)}
+                        className={`h-7 w-12 rounded-full transition-all relative shadow-sm ${newQuestionIsPopup ? 'bg-primary' : 'bg-gray-300'}`}
+                      >
+                        <div className={`absolute top-1 left-1 bg-white h-5 w-5 rounded-full transition-transform ${newQuestionIsPopup ? 'translate-x-5' : 'translate-x-0'}`} />
+                      </button>
+                      <div className="flex flex-col">
+                        <span className="text-sm font-black text-foreground">Popup Mode</span>
+                        <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Show as overlay</span>
                       </div>
-                      <div>
-                        <h3 className="text-lg font-black text-foreground leading-none">Breakpoint Designer</h3>
-                        <p className="text-[11px] text-muted-foreground mt-1 font-medium italic">Create immersive intermediate slides with custom code.</p>
+                    </div>
+                    <div className="h-10 w-px bg-black/5" />
+                    <div className="flex items-center gap-4">
+                      <button
+                        onClick={() => setNewQuestionIsActive(!newQuestionIsActive)}
+                        className={`h-7 w-12 rounded-full transition-all relative shadow-sm ${newQuestionIsActive ? 'bg-green-500' : 'bg-gray-300'}`}
+                      >
+                        <div className={`absolute top-1 left-1 bg-white h-5 w-5 rounded-full transition-transform ${newQuestionIsActive ? 'translate-x-5' : 'translate-x-0'}`} />
+                      </button>
+                      <div className="flex flex-col">
+                        <span className="text-sm font-black text-foreground">Active Item</span>
+                        <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Visible to users</span>
                       </div>
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
-                    <div className="space-y-6">
-                      {/* Editor Tabs */}
-                      <div className="bg-muted/30 p-1.5 rounded-2xl flex gap-1 items-center">
-                        <button
-                          onClick={() => setActiveCodeTab('visual')}
-                          className={`flex-1 py-3 px-4 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all ${activeCodeTab === 'visual'
-                              ? 'bg-white text-primary shadow-sm ring-1 ring-[#1a1a1b]/5'
-                              : 'text-muted-foreground hover:text-foreground hover:bg-white/50'
-                            }`}
-                        >
-                          Visual Designer
-                        </button>
-                        <button
-                          onClick={() => setActiveCodeTab('advanced')}
-                          className={`flex-1 py-3 px-4 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all ${activeCodeTab === 'advanced'
-                              ? 'bg-white text-primary shadow-sm ring-1 ring-[#1a1a1b]/5'
-                              : 'text-muted-foreground hover:text-foreground hover:bg-white/50'
-                            }`}
-                        >
-                          Advanced (CSS/JS)
-                        </button>
-                      </div>
+                  <div className="pt-2">
+                    {newQuestionType === 'breakpoint' ? (
+                      <div className="space-y-6 animate-in slide-in-from-bottom-4 duration-500">
+                        <div className="flex items-center justify-between">
+                          <label className="text-muted-foreground pl-1 text-[10px] font-black tracking-widest uppercase">
+                            {isSourceMode ? 'HTML Source Code' : 'Visual Designer'}
+                          </label>
+                          <button
+                            onClick={() => setIsSourceMode(!isSourceMode)}
+                            className={`text-[10px] font-black px-4 py-2 rounded-xl transition-all border shadow-sm ${isSourceMode ? 'bg-primary text-white border-primary' : 'bg-white text-primary border-primary/20 hover:bg-primary/5'}`}
+                          >
+                            {isSourceMode ? 'VIEW VISUALLY' : 'EDIT SOURCE CODE'}
+                          </button>
+                        </div>
 
-                      {/* Visual Editor */}
-                      <div className="animate-in fade-in slide-in-from-left-4 duration-300">
-                        {activeCodeTab === 'visual' && (
-                          <div className="space-y-4">
-                            <label className="text-muted-foreground pl-1 text-[10px] font-black tracking-widest uppercase">
-                              Slide Content
-                            </label>
-                            <div className="quill-wrapper bg-white rounded-2xl overflow-hidden border-2 border-muted/50 focus-within:border-primary/20 transition-all shadow-sm">
+                        <div className="rounded-[32px] overflow-hidden border-2 border-[#1a1a1b]/5 shadow-2xl bg-white focus-within:ring-4 focus-within:ring-primary/5 transition-all">
+                          {isSourceMode ? (
+                            <textarea
+                              value={newCustomHtml}
+                              onChange={(e) => setNewCustomHtml(e.target.value)}
+                              placeholder="<div class='custom'>Enter your HTML here...</div>"
+                              className="w-full h-[500px] p-10 font-mono text-[14px] bg-[#1a1a1b] text-blue-100 outline-none resize-none leading-relaxed custom-scrollbar"
+                            />
+                          ) : (
+                            <div className="quill-wrapper bg-white">
                               <ReactQuill
                                 theme="snow"
                                 value={newCustomHtml}
@@ -1298,156 +1178,185 @@ export const Dashboard = () => {
                                     ['clean']
                                   ],
                                 }}
-                                className="h-[350px] border-none"
+                                className="h-[460px] border-none"
                               />
-                            </div>
-                            <style>{`
-                                .quill-wrapper .ql-toolbar {
-                                    border: none !important;
-                                    border-bottom: 2px solid #f4f4f5 !important;
-                                    padding: 12px !important;
-                                    background: #fafafa !important;
-                                }
-                                .quill-wrapper .ql-container {
-                                    border: none !important;
-                                    font-size: 16px !important;
-                                    font-family: inherit !important;
-                                }
-                                .quill-wrapper .ql-editor {
-                                    padding: 24px !important;
-                                    min-height: 300px !important;
-                                }
-                                .quill-wrapper .ql-editor h1 { font-size: 2.5rem; font-weight: 900; }
-                                .quill-wrapper .ql-editor h2 { font-size: 2rem; font-weight: 800; }
-                                .quill-wrapper .ql-editor h3 { font-size: 1.5rem; font-weight: 700; }
-                            `}</style>
-                          </div>
-                        )}
-
-                        {activeCodeTab === 'advanced' && (
-                          <div className="space-y-6">
-                            <div className="space-y-3">
-                              <label className="text-muted-foreground pl-1 text-[10px] font-black tracking-widest uppercase">
-                                Custom CSS (Advanced)
-                              </label>
-                              <textarea
-                                value={newCustomCss}
-                                onChange={(e) => setNewCustomCss(e.target.value)}
-                                placeholder=".custom-class { color: red; }"
-                                className="bg-[#1a1a1b] text-yellow-200/80 focus:ring-2 focus:ring-primary/20 font-mono w-full h-[180px] rounded-2xl border-none px-6 py-5 text-[13px] leading-relaxed transition-all outline-none resize-none shadow-2xl"
-                              />
-                            </div>
-                            <div className="space-y-3">
-                              <label className="text-muted-foreground pl-1 text-[10px] font-black tracking-widest uppercase">
-                                Custom JS (Advanced)
-                              </label>
-                              <textarea
-                                value={newCustomJs}
-                                onChange={(e) => setNewCustomJs(e.target.value)}
-                                placeholder="console.log('Slide active');"
-                                className="bg-[#1a1a1b] text-blue-300/80 focus:ring-2 focus:ring-primary/20 font-mono w-full h-[180px] rounded-2xl border-none px-6 py-5 text-[13px] leading-relaxed transition-all outline-none resize-none shadow-2xl"
-                              />
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Enhanced Device Preview */}
-                    <div className="space-y-4 flex flex-col">
-                      <div className="flex items-center justify-between">
-                        <label className="text-muted-foreground pl-1 text-[10px] font-black tracking-widest uppercase">
-                          Responsive Preview
-                        </label>
-                        <div className="flex bg-muted/30 p-1 rounded-xl gap-1">
-                          <button
-                            onClick={() => setPreviewSize('mobile')}
-                            className={`p-2 rounded-lg transition-all ${previewSize === 'mobile' ? 'bg-white shadow-sm text-primary' : 'text-muted-foreground'}`}
-                          >
-                            <Smartphone size={14} />
-                          </button>
-                          <button
-                            onClick={() => setPreviewSize('tablet')}
-                            className={`p-2 rounded-lg transition-all ${previewSize === 'tablet' ? 'bg-white shadow-sm text-primary' : 'text-muted-foreground'}`}
-                          >
-                            <Tablet size={14} />
-                          </button>
-                          <button
-                            onClick={() => setPreviewSize('desktop')}
-                            className={`p-2 rounded-lg transition-all ${previewSize === 'desktop' ? 'bg-white shadow-sm text-primary' : 'text-muted-foreground'}`}
-                          >
-                            <Monitor size={14} />
-                          </button>
-                        </div>
-                      </div>
-
-                      <div className="flex justify-center flex-1 bg-muted/10 rounded-[32px] p-8 border-2 border-dashed border-[#1a1a1b]/5 min-h-[600px] relative items-center">
-                        <div
-                          className={`relative transition-all duration-500 ease-in-out bg-[#1a1a1b] shadow-[0_50px_100px_-20px_rgba(0,0,0,0.3)] 
-                            ${previewSize === 'mobile' ? 'w-full max-w-[300px] aspect-[9/18.5] rounded-[48px] p-2 ring-8 ring-gray-100 ring-inset' :
-                              previewSize === 'tablet' ? 'w-full max-w-[500px] aspect-[4/3] rounded-[32px] p-3' :
-                                'w-full max-w-[800px] aspect-[16/10] rounded-xl p-4'}`}
-                        >
-                          {/* Device UI elements (only for mobile/tablet) */}
-                          {previewSize !== 'desktop' && (
-                            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-24 h-5 bg-[#1a1a1b] rounded-b-[16px] z-20 flex items-center justify-center gap-2">
-                              <div className="w-8 h-1 rounded-full bg-gray-800" />
-                              <div className="w-1.5 h-1.5 rounded-full bg-gray-800" />
                             </div>
                           )}
-
-                          <div className={`w-full h-full bg-white overflow-hidden flex flex-col relative ${previewSize === 'desktop' ? 'rounded-lg' : previewSize === 'tablet' ? 'rounded-[20px]' : 'rounded-[38px]'}`}>
-                            <style dangerouslySetInnerHTML={{ __html: newCustomCss }} />
-
-                            <div className="h-10 px-6 flex items-center justify-between text-[10px] font-black text-[#1a1a1b] opacity-40">
-                              <span>9:41</span>
-                              <div className="flex items-center gap-1.5">
-                                <Search size={10} />
-                                <div className="h-2 w-3.5 rounded-[1px] border border-black/40" />
-                              </div>
+                        </div>
+                        <style>{`
+                            .quill-wrapper .ql-toolbar {
+                                border: none !important;
+                                border-bottom: 2px solid #f8f8f8 !important;
+                                padding: 20px !important;
+                                background: #fafafa !important;
+                            }
+                            .quill-wrapper .ql-container {
+                                border: none !important;
+                                font-size: 16px !important;
+                            }
+                            .quill-wrapper .ql-editor {
+                                padding: 40px !important;
+                                min-height: 400px !important;
+                            }
+                            .quill-wrapper .ql-editor h1 { font-size: 2.2rem; font-weight: 900; margin-bottom: 1.5rem; }
+                            .quill-wrapper .ql-editor p { line-height: 1.8; margin-bottom: 1rem; }
+                        `}</style>
+                      </div>
+                    ) : (
+                      <div className="space-y-6">
+                        {(newQuestionType === 'single-select' || newQuestionType === 'multi-select') && (
+                          <div className="space-y-4">
+                            <div className="flex items-center justify-between">
+                              <label className="text-muted-foreground pl-1 text-[10px] font-black tracking-widest uppercase">
+                                Answer Options
+                              </label>
+                              <Button
+                                onClick={handleAddOption}
+                                variant="ghost"
+                                size="sm"
+                                className="h-10 rounded-xl text-[10px] font-black uppercase tracking-widest text-primary hover:bg-primary/5 bg-primary/5 px-4"
+                              >
+                                <Plus size={14} className="mr-2" /> Add New Option
+                              </Button>
                             </div>
 
-                            <div
-                              className="flex-1 overflow-y-auto custom-scrollbar p-6"
-                              dangerouslySetInnerHTML={{ __html: newCustomHtml || '<div class="flex items-center justify-center h-full text-muted-foreground/30 text-[10px] font-bold uppercase tracking-widest">Preview Area</div>' }}
-                            />
-
-                            <div className="p-6 pt-0 mt-auto bg-white flex justify-center pb-8">
-                              <button disabled className="w-full h-12 rounded-full bg-[#1a1a1b] text-white text-[14px] font-black opacity-90">
-                                Continue
-                              </button>
-                            </div>
-
-                            {/* Enlarge Overlay */}
-                            <div className="absolute inset-0 bg-black/0 hover:bg-black/5 transition-all flex items-center justify-center group cursor-pointer" onClick={() => setIsEnlargedPreviewOpen(true)}>
-                              <div className="bg-white/90 backdrop-blur shadow-2xl h-12 w-12 rounded-full flex items-center justify-center scale-0 group-hover:scale-100 transition-transform">
-                                <Maximize size={20} className="text-primary" />
-                              </div>
+                            <div className="grid grid-cols-1 gap-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar p-1">
+                              {newQuestionOptions.map((opt, idx) => (
+                                <div key={idx} className="flex gap-4 group items-center bg-muted/10 p-2 rounded-2xl hover:bg-muted/20 transition-all">
+                                  <input
+                                    type="text"
+                                    value={opt.emoji}
+                                    onChange={(e) => handleUpdateOption(idx, 'emoji', e.target.value)}
+                                    placeholder="Icon"
+                                    className="bg-white shadow-sm w-16 h-14 rounded-xl border-none text-center text-xl outline-none focus:ring-2 focus:ring-primary/20 transition-all font-black"
+                                  />
+                                  <input
+                                    type="text"
+                                    value={opt.text}
+                                    onChange={(e) => handleUpdateOption(idx, 'text', e.target.value)}
+                                    placeholder={`Option ${idx + 1} Label`}
+                                    className="bg-white shadow-sm flex-1 h-14 rounded-xl border-none px-6 text-base font-bold outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                                  />
+                                  <Button
+                                    onClick={() => handleRemoveOption(idx)}
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-14 w-14 rounded-xl p-0 text-red-400 hover:bg-red-50 hover:text-red-500 transition-all"
+                                  >
+                                    <Trash2 size={18} />
+                                  </Button>
+                                </div>
+                              ))}
                             </div>
                           </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Right Side: Centered High-Fidelity Preview */}
+                <div className="bg-[#f0f0f1] flex flex-col h-full overflow-hidden">
+                  <div className="p-8 border-b border-black/5 flex items-center justify-between bg-white/50 backdrop-blur">
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-xl bg-black text-white flex items-center justify-center font-black italic">P</div>
+                      <h4 className="text-[10px] font-black tracking-[0.2em] uppercase text-muted-foreground">REAL-TIME PREVIEW</h4>
+                    </div>
+
+                    <div className="flex bg-muted p-1 rounded-2xl gap-1">
+                      {(['mobile', 'tablet', 'desktop'] as const).map((size) => (
+                        <button
+                          key={size}
+                          onClick={() => setPreviewSize(size)}
+                          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${previewSize === size ? 'bg-white text-primary shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+                        >
+                          {size === 'mobile' ? <Smartphone size={14} /> : size === 'tablet' ? <Tablet size={14} /> : <Monitor size={14} />}
+                          <span className="hidden xxl:inline">{size}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="flex-1 overflow-hidden flex items-center justify-center p-12 lg:p-20 relative">
+                    <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(#000 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
+
+                    <div
+                      className={`relative z-10 transition-all duration-700 ease-[cubic-bezier(0.23,1,0.32,1)] bg-[#1a1a1b] shadow-[0_60px_120px_-30px_rgba(0,0,0,0.5)] 
+                        ${previewSize === 'mobile' ? 'w-full max-w-[340px] h-[700px] rounded-[60px] p-3' :
+                          previewSize === 'tablet' ? 'w-full max-w-[600px] aspect-[4/3] rounded-[40px] p-3' :
+                            'w-full max-w-[95%] h-[550px] rounded-3xl p-1'}`}
+                    >
+                      {/* Device Components */}
+                      {previewSize !== 'desktop' && (
+                        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-7 bg-[#1a1a1b] rounded-b-[24px] z-20 flex items-center justify-center gap-4">
+                          <div className="w-12 h-1.5 rounded-full bg-gray-800" />
+                          <div className="w-2.5 h-2.5 rounded-full bg-gray-800 shadow-inner" />
+                        </div>
+                      )}
+
+                      <div className={`w-full h-full bg-white overflow-hidden flex flex-col relative ${previewSize === 'desktop' ? 'rounded-2xl' : previewSize === 'tablet' ? 'rounded-[30px]' : 'rounded-[50px]'}`}>
+                        {/* Browser Top Bar */}
+                        <div className="h-10 px-6 flex items-center justify-between text-[10px] font-black text-[#1a1a1b]/30 border-b border-muted/20">
+                          <div className="flex gap-1.5">
+                            <div className="w-2 h-2 rounded-full bg-red-400" />
+                            <div className="w-2 h-2 rounded-full bg-yellow-400" />
+                            <div className="w-2 h-2 rounded-full bg-green-400" />
+                          </div>
+                          <span className="bg-muted px-4 py-1 rounded-full font-bold tracking-tight">preview.quizz.app</span>
+                          <Search size={12} className="opacity-0" />
+                        </div>
+
+                        <div className="flex-1 overflow-hidden relative breakpoint-preview-container">
+                          {newQuestionType === 'breakpoint' ? (
+                            <iframe
+                              key={newCustomHtml + newCustomCss + newCustomJs} /* Force refresh on any change */
+                              srcDoc={constructSrcDoc(newCustomHtml, newCustomCss, newCustomJs)}
+                              className="w-full h-full border-none"
+                              sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
+                              title="Breakpoint Preview"
+                            />
+                          ) : (
+                            <div className="space-y-8">
+                              <p className="text-xs font-black text-primary/40 uppercase tracking-widest">{newQuestionGender === 'both' ? 'GENERAL QUESTION' : `${newQuestionGender} Target`}</p>
+                              <h1 className="text-3xl lg:text-4xl font-black text-[#1a1a1b] leading-tight">{newQuestionText || 'Enter your question text to preview...'}</h1>
+                              <div className="space-y-3 pt-6">
+                                {(newQuestionType === 'single-select' || newQuestionType === 'multi-select') && newQuestionOptions.map((opt, i) => (
+                                  <div key={i} className="h-16 px-6 rounded-2xl bg-muted/30 border-2 border-transparent flex items-center gap-4 text-base font-bold text-foreground">
+                                    <span className="text-2xl">{opt.emoji}</span>
+                                    {opt.text}
+                                  </div>
+                                ))}
+                                {(newQuestionType === 'text-input' || newQuestionType === 'number-input') && (
+                                  <div className="h-16 px-6 rounded-2xl bg-muted/30 border-2 border-muted flex items-center text-muted-foreground/40 font-bold italic">
+                                    Input field will appear here...
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="p-10 pt-4 mt-auto bg-white/95 backdrop-blur-md flex justify-center border-t border-black/5">
+                          <button disabled className="w-full h-16 rounded-full bg-[#1a1a1b] text-white text-lg font-black shadow-[0_20px_40px_-10px_rgba(0,0,0,0.3)] opacity-95 transition-transform">
+                            Continue
+                          </button>
                         </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              )}
 
-              <div className="flex items-center gap-3 pt-6 border-t border-[#1a1a1b]/5">
-                <Button
-                  onClick={closeModal}
-                  size="lg"
-                  variant="ghost"
-                  className="text-muted-foreground hover:text-foreground rounded-xl font-bold flex-1"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  onClick={handleSaveQuestion}
-                  size="lg"
-                  className="shadow-primary/20 flex-[2] rounded-xl font-bold shadow-lg"
-                >
-                  {editingQuestion ? 'Update Changes' : 'Create Question'}
-                </Button>
+                  <div className="px-10 py-6 border-t border-black/5 bg-[#fafafa]">
+                    <div className="flex items-center justify-end gap-4">
+                      <Button variant="ghost" onClick={closeModal} className="h-14 px-10 rounded-2xl font-black uppercase tracking-widest text-[11px] hover:bg-black/5">cancel changes</Button>
+                      <Button
+                        onClick={handleSaveQuestion}
+                        className="h-14 px-12 rounded-2xl bg-primary text-white font-black uppercase tracking-[0.2em] text-[12px] shadow-[0_20px_40px_-10px_rgba(255,107,107,0.4)] hover:shadow-lg transition-all hover:scale-[1.02]"
+                      >
+                        {editingQuestion ? 'Update Quiz Step' : 'Launch New Step'}
+                      </Button>
+                    </div>
+                  </div>
+                </div>
               </div>
             </CardContent>
           </Card>
