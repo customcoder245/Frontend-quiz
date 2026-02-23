@@ -43,7 +43,11 @@ export default function HomePage() {
                             <a href="#" className="text-sm font-bold text-[#1a1a1b] transition-opacity hover:opacity-70">FAQ</a>
                             <a href="#" className="text-sm font-bold text-[#1a1a1b] transition-opacity hover:opacity-70">Contact us</a>
                         </nav>
-                        <button className="hidden md:block bg-gradient-to-r from-[#D90655] to-[#FC3F39] hover:opacity-90 shadow-xl shadow-primary/20 h-[35px] min-w-[25px] rounded-full px-8 md:px-16 text-[14px] font-bold text-white transition-all active:scale-[0.98]" onClick={() => navigate('/login')}>Login</button>
+                        {isLoggedIn ? (
+                            <button className="hidden md:block bg-[#1a1a1b] hover:opacity-90 shadow-xl h-[35px] min-w-[25px] rounded-full px-8 md:px-16 text-[14px] font-bold text-white transition-all active:scale-[0.98]" onClick={handleLogout}>Logout</button>
+                        ) : (
+                            <button className="hidden md:block bg-gradient-to-r from-[#D90655] to-[#FC3F39] hover:opacity-90 shadow-xl shadow-primary/20 h-[35px] min-w-[25px] rounded-full px-8 md:px-16 text-[14px] font-bold text-white transition-all active:scale-[0.98]" onClick={() => navigate('/login')}>Login</button>
+                        )}
 
                         {/* Mobile Menu Toggle */}
                         <button
@@ -123,15 +127,30 @@ export default function HomePage() {
                             <div className="flex flex-col sm:flex-row gap-5">
                                 <button
                                     className="h-[56px] sm:w-[196px] rounded-[50px] bg-gradient-to-r from-[#D90655] to-[#FC3F39] text-[24px] font-bold text-white transition-all active:scale-[0.98] shadow-xl shadow-pink-100"
-                                    onClick={() => navigate('/quiz')}
+                                    onClick={() => navigate('/quiz?gender=female')}
                                 >
                                     Female
                                 </button>
                                 <button
                                     className="h-[56px] sm:w-[195px] rounded-[50px] bg-[#1a1a1b] text-[24px] font-bold text-white transition-all hover:bg-[#2a2a2b] active:scale-[0.98] shadow-xl shadow-black/5"
-                                    onClick={() => navigate('/quiz')}
+                                    onClick={() => navigate('/quiz?gender=male')}
                                 >
                                     Male
+                                </button>
+                            </div>
+
+                            <div className="flex flex-col sm:flex-row gap-5 pt-4">
+                                <button
+                                    className="h-[56px] sm:w-[196px] rounded-[50px] bg-white border-2 border-[#f4f4f5] text-[18px] font-bold text-[#1a1a1b] transition-all hover:bg-[#f4f4f5] active:scale-[0.98] flex items-center justify-center gap-2"
+                                    onClick={() => navigate('/quiz')}
+                                >
+                                    <span className="text-xl">G</span> Gmail
+                                </button>
+                                <button
+                                    className="h-[56px] sm:w-[195px] rounded-[50px] bg-white border-2 border-[#f4f4f5] text-[18px] font-bold text-[#1a1a1b] transition-all hover:bg-[#f4f4f5] active:scale-[0.98] flex items-center justify-center gap-2"
+                                    onClick={() => navigate('/quiz')}
+                                >
+                                    <span>✉️</span> Mail
                                 </button>
                             </div>
                         </div>

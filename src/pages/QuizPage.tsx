@@ -1,37 +1,130 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { ShieldCheck, CheckCircle2, ArrowLeft } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { ShieldCheck, CheckCircle2, ArrowLeft, Loader2 } from 'lucide-react';
+
+interface Option {
+    text: string;
+    emoji?: string;
+}
+
+interface Question {
+    _id: string;
+    questionText: string;
+    type: 'single-select' | 'multi-select' | 'text-input' | 'number-input';
+    options: Option[];
+    subtitle?: string;
+}
 
 export default function QuizPage() {
     const navigate = useNavigate();
-    const [step] = useState(2);
-    const totalSteps = 24;
-    const [selectedOption, setSelectedOption] = useState<number | null>(1);
+    const [searchParams] = useSearchParams();
+    const gender = searchParams.get('gender') || 'both';
 
-    const questions = [
-        {
-            title: "How active are you right now?",
-            subtitle: "This helps us personalize your results",
-            options: [
-                "Very active (5+ workouts/week)",
-                "Somewhat active (2-4 workouts/week)",
-                "Light activity",
-                "Not active"
-            ]
+    const [questions, setQuestions] = useState<Question[]>([]);
+    const [currentIndex, setCurrentIndex] = useState(0);
+    const [loading, setLoading] = useState(true);
+    const [responses, setResponses] = useState<any[]>([]);
+    const [selectedOptions, setSelectedOptions] = useState<number[]>([]);
+    const [inputValue, setInputValue] = useState('');
+
+    const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api/v1';
+
+    useEffect(() => {
+        const fetchQuestions = async () => {
+            try {
+                const response = await fetch(`${API_BASE_URL}/questions?gender=${gender}`);
+                const data = await response.json();
+                if (data.questions) {
+                    setQuestions(data.questions);
+                }
+            } catch (error) {
+                console.error('Error fetching questions:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchQuestions();
+    }, [gender, API_BASE_URL]);
+
+    const handleNext = () => {
+        const currentQuestion = questions[currentIndex];
+        let answer: any;
+
+        if (currentQuestion.type === 'multi-select') {
+            answer = selectedOptions.map(idx => currentQuestion.options[idx].text);
+        } else if (currentQuestion.type === 'text-input' || currentQuestion.type === 'number-input') {
+            answer = inputValue;
+        } else {
+            // single-select handled in handleOptionSelect
+            return;
         }
-    ];
 
-    const handleOptionSelect = (index: number) => {
-        setSelectedOption(index);
-        // Simulate progress or navigate to next page if it's a break point
+        saveResponse(answer);
+    };
+
+    const handleOptionSelect = (optionIndex: number) => {
+        const currentQuestion = questions[currentIndex];
+
+        if (currentQuestion.type === 'multi-select') {
+            if (selectedOptions.includes(optionIndex)) {
+                setSelectedOptions(selectedOptions.filter(i => i !== optionIndex));
+            } else {
+                setSelectedOptions([...selectedOptions, optionIndex]);
+            }
+        } else {
+            setSelectedOptions([optionIndex]);
+            saveResponse(currentQuestion.options[optionIndex].text);
+        }
+    };
+
+    const saveResponse = (answer: any) => {
+        const currentQuestion = questions[currentIndex];
+        const newResponse = {
+            questionId: currentQuestion._id,
+            answer: answer
+        };
+
+        const updatedResponses = [...responses];
+        updatedResponses[currentIndex] = newResponse;
+        setResponses(updatedResponses);
+
+        // Save progress to session storage
+        sessionStorage.setItem('quizResponses', JSON.stringify(updatedResponses));
+        sessionStorage.setItem('quizGender', gender);
+
         setTimeout(() => {
-            if (step === 2) navigate('/break-1');
+            if (currentIndex < questions.length - 1) {
+                setCurrentIndex(currentIndex + 1);
+                setSelectedOptions([]);
+                setInputValue('');
+            } else {
+                navigate('/email-form');
+            }
         }, 500);
     };
 
+    if (loading) {
+        return (
+            <div className="min-h-screen flex items-center justify-center">
+                <Loader2 className="w-10 h-10 animate-spin text-primary" />
+            </div>
+        );
+    }
+
+    if (questions.length === 0) {
+        return (
+            <div className="min-h-screen flex items-center justify-center">
+                <p className="text-xl font-bold">No questions found.</p>
+            </div>
+        );
+    }
+
+    const currentQuestion = questions[currentIndex];
+    const progress = ((currentIndex + 1) / questions.length) * 100;
+
     return (
         <div className="min-h-screen bg-white font-sans flex flex-col">
-            {/* Quiz Header */}
             <header className="px-6 py-6 flex items-center justify-between border-b border-[#1a1a1b]/5">
                 <div className="flex items-center cursor-pointer" onClick={() => navigate('/')}>
                     <img src="/logo.png" alt="The Mediterranean Diet" className="h-8 md:h-10 w-auto object-contain" />
@@ -49,58 +142,84 @@ export default function QuizPage() {
                 </div>
             </header>
 
-            {/* Progress Bar Container */}
             <div className="max-w-3xl mx-auto w-full px-6 pt-10 pb-6 space-y-8">
                 <div className="flex items-center justify-between">
-                    <button className="p-2 hover:bg-[#1a1a1b]/5 rounded-full transition-colors text-[#1a1a1b]/40">
+                    <button
+                        className="p-2 hover:bg-[#1a1a1b]/5 rounded-full transition-colors text-[#1a1a1b]/40"
+                        onClick={() => currentIndex > 0 ? setCurrentIndex(currentIndex - 1) : navigate('/')}
+                    >
                         <ArrowLeft className="w-6 h-6" />
                     </button>
                     <span className="text-xl font-black text-[#1a1a1b]/20 tracking-tighter">
-                        {step}/{totalSteps}
+                        {currentIndex + 1}/{questions.length}
                     </span>
                 </div>
 
                 <div className="w-full h-2 bg-[#f4f4f5] rounded-full overflow-hidden relative">
                     <div
                         className="h-full bg-gradient-to-r from-[#D90655] to-[#FC3F39] transition-all duration-500 rounded-full"
-                        style={{ width: `${(step / totalSteps) * 100}%` }}
-                    />
-                    {/* Circle Indicator */}
-                    <div
-                        className="absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-[#1a1a1b] border-2 border-white rounded-full shadow-md z-10 transition-all duration-500"
-                        style={{ left: `calc(${(step / totalSteps) * 100}% - 8px)` }}
+                        style={{ width: `${progress}%` }}
                     />
                 </div>
             </div>
 
-            {/* Question Section */}
             <main className="flex-1 max-w-3xl mx-auto w-full px-6 py-8 flex flex-col items-center">
                 <div className="text-center space-y-4 mb-12">
                     <p className="text-sm font-bold text-[#1a1a1b]/40">
-                        {questions[0].subtitle}
+                        {currentQuestion.subtitle || "PERSONALIZING YOUR RESULTS"}
                     </p>
                     <h2 className="text-4xl md:text-5xl font-black text-[#1a1a1b] tracking-tight">
-                        {questions[0].title}
+                        {currentQuestion.questionText}
                     </h2>
                 </div>
 
                 <div className="w-full space-y-4">
-                    {questions[0].options.map((option, index) => (
-                        <button
-                            key={index}
-                            onClick={() => handleOptionSelect(index)}
-                            className={`w-full p-6 text-xl font-bold rounded-2xl border-2 transition-all flex items-center justify-center text-center leading-tight
-                                ${selectedOption === index
-                                    ? 'bg-gradient-to-r from-[#D90655] to-[#FC3F39] border-transparent text-white shadow-lg shadow-[#D90655]/20 scale-[1.02]'
-                                    : 'bg-[#f4f4f5] border-[#f4f4f5] text-[#1a1a1b] hover:border-[#1a1a1b]/10'
-                                }`}
-                        >
-                            {option}
-                        </button>
-                    ))}
+                    {currentQuestion.type === 'text-input' || currentQuestion.type === 'number-input' ? (
+                        <div className="space-y-6">
+                            <input
+                                type={currentQuestion.type === 'number-input' ? 'number' : 'text'}
+                                className="w-full h-20 rounded-2xl border-2 border-[#f4f4f5] bg-[#f4f4f5] px-8 text-2xl font-bold focus:bg-white focus:border-primary transition-all text-center"
+                                value={inputValue}
+                                onChange={(e) => setInputValue(e.target.value)}
+                                placeholder="Enter value..."
+                            />
+                            <button
+                                onClick={handleNext}
+                                disabled={!inputValue}
+                                className="w-full h-16 rounded-full bg-[#1a1a1b] text-white text-xl font-black shadow-xl disabled:opacity-50"
+                            >
+                                Continue
+                            </button>
+                        </div>
+                    ) : (
+                        <>
+                            {currentQuestion.options.map((option, index) => (
+                                <button
+                                    key={index}
+                                    onClick={() => handleOptionSelect(index)}
+                                    className={`w-full p-6 text-xl font-bold rounded-2xl border-2 transition-all flex items-center justify-between px-8 leading-tight
+                                        ${selectedOptions.includes(index)
+                                            ? 'bg-gradient-to-r from-[#D90655] to-[#FC3F39] border-transparent text-white shadow-lg shadow-[#D90655]/20 scale-[1.02]'
+                                            : 'bg-[#f4f4f5] border-[#f4f4f5] text-[#1a1a1b] hover:border-[#1a1a1b]/10'
+                                        }`}
+                                >
+                                    <span>{option.text}</span>
+                                    {option.emoji && <span className="text-2xl">{option.emoji}</span>}
+                                </button>
+                            ))}
+                            {currentQuestion.type === 'multi-select' && (
+                                <button
+                                    onClick={handleNext}
+                                    disabled={selectedOptions.length === 0}
+                                    className="w-full h-16 rounded-full bg-[#1a1a1b] text-white text-xl font-black shadow-xl mt-6 disabled:opacity-50"
+                                >
+                                    Continue
+                                </button>
+                            )}
+                        </>
+                    )}
                 </div>
 
-                {/* Live Activity Indicator */}
                 <div className="mt-auto py-12 flex items-center space-x-2 text-xs font-bold text-[#1a1a1b]/60">
                     <div className="w-2 h-2 bg-[#34a853] rounded-full animate-pulse" />
                     <span>856 people are taking this quiz right now</span>
