@@ -146,6 +146,13 @@ export const Dashboard = () => {
 
 
   React.useEffect(() => {
+    // Auth Check
+    const token = localStorage.getItem('token');
+    if (!token) {
+      navigate('/login');
+      return;
+    }
+
     if (activeTab === 'questions') {
       fetchQuestions();
     } else if (activeTab === 'submissions') {
@@ -162,6 +169,9 @@ export const Dashboard = () => {
       if (resp.ok) {
         const data = await resp.json();
         setSubmissions(data.submissions || []);
+      } else if (resp.status === 401) {
+        alert('Session expired. Please login again.');
+        handleLogout();
       }
     } catch (err) {
       console.error('Failed to fetch submissions:', err);
