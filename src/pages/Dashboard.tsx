@@ -1,7 +1,8 @@
 import React, { useMemo, useState } from 'react';
 import { useTable, usePagination, useGlobalFilter } from 'react-table';
 import { useNavigate } from 'react-router-dom';
-// hello
+import ReactQuill from 'react-quill-new';
+import 'react-quill-new/dist/quill.snow.css';
 import {
   LayoutDashboard,
   ClipboardList,
@@ -19,6 +20,10 @@ import {
   CreditCard,
   CheckSquare,
   Circle,
+  Smartphone,
+  Tablet,
+  Monitor,
+  Maximize,
   LogOut,
   Menu,
   Settings,
@@ -42,11 +47,14 @@ interface Question {
   _id?: string;
   order: number;
   questionText: string;
-  type: 'single-select' | 'multi-select' | 'text-input' | 'number-input';
+  type: 'single-select' | 'multi-select' | 'text-input' | 'number-input' | 'breakpoint';
   gender: 'both' | 'male' | 'female';
   options: Option[];
   isPopup: boolean;
   isActive: boolean;
+  customHtml?: string;
+  customCss?: string;
+  customJs?: string;
 }
 
 interface Submission {
@@ -135,6 +143,14 @@ export const Dashboard = () => {
   const [newQuestionIsPopup, setNewQuestionIsPopup] = useState(false);
   const [newQuestionIsActive, setNewQuestionIsActive] = useState(true);
   const [newQuestionOptions, setNewQuestionOptions] = useState<Option[]>([]);
+  const [newCustomHtml, setNewCustomHtml] = useState('');
+  const [newCustomCss, setNewCustomCss] = useState('');
+  const [newCustomJs, setNewCustomJs] = useState('');
+  const [isAddDropdownOpen, setIsAddDropdownOpen] = useState(false);
+  const [insertAfterOrderId, setInsertAfterOrderId] = useState<string>('last');
+  const [activeCodeTab, setActiveCodeTab] = useState<'visual' | 'advanced'>('visual');
+  const [previewSize, setPreviewSize] = useState<'mobile' | 'tablet' | 'desktop'>('mobile');
+  const [isEnlargedPreviewOpen, setIsEnlargedPreviewOpen] = useState(false);
 
   React.useEffect(() => {
     if (activeTab === 'questions') {
@@ -337,15 +353,39 @@ export const Dashboard = () => {
 
     const questionData: Partial<Question> = {
       order: newQuestionOrder,
-      questionText: newQuestionText,
+      questionText: newQuestionText || (newQuestionType === 'breakpoint' ? 'Breakpoint Slide' : ''),
       type: newQuestionType,
       gender: newQuestionGender,
       options: newQuestionOptions,
       isPopup: newQuestionIsPopup,
       isActive: newQuestionIsActive,
+      customHtml: newCustomHtml,
+      customCss: newCustomCss,
+      customJs: newCustomJs,
     };
 
     try {
+      // Shifting logic if inserting in the middle
+      if (!editingQuestion && insertAfterOrderId !== 'last') {
+        const afterIndex = questions.findIndex(q => q._id === insertAfterOrderId);
+        const targetOrder = questions[afterIndex].order + 1;
+        questionData.order = targetOrder;
+
+        // Shift existing questions
+        const toShift = questions.filter(q => q.order >= targetOrder);
+        for (const q of toShift) {
+          await fetch(`${API_URL}/questions/${q._id}`, {
+            method: 'PUT',
+            headers: getHeaders(),
+            body: JSON.stringify({ order: q.order + 1 }),
+          });
+        }
+      } else if (!editingQuestion) {
+        // Just append at the end
+        const maxOrder = questions.length > 0 ? Math.max(...questions.map(q => q.order)) : 0;
+        questionData.order = maxOrder + 1;
+      }
+
       const url = editingQuestion
         ? `${API_URL}/questions/${editingQuestion._id}`
         : `${API_URL}/questions`;
@@ -380,6 +420,9 @@ export const Dashboard = () => {
     setNewQuestionIsPopup(q.isPopup);
     setNewQuestionIsActive(q.isActive);
     setNewQuestionOptions([...q.options]);
+    setNewCustomHtml(q.customHtml || '');
+    setNewCustomCss(q.customCss || '');
+    setNewCustomJs(q.customJs || '');
     setIsAddingQuestion(true);
   };
 
@@ -393,6 +436,10 @@ export const Dashboard = () => {
     setNewQuestionIsPopup(false);
     setNewQuestionIsActive(true);
     setNewQuestionOptions([]);
+    setNewCustomHtml('');
+    setNewCustomCss('');
+    setNewCustomJs('');
+    setActiveCodeTab('visual');
   };
 
   const handleDeleteQuestion = async (id: string) => {
@@ -842,22 +889,66 @@ export const Dashboard = () => {
                   >
                     Refresh
                   </Button> */}
-                  <Button
-                    onClick={() => {
-                      setIsAddingQuestion(true);
-                      setEditingQuestion(null);
-                      setNewQuestionType('single-select');
-                      setNewQuestionText('');
-                      setNewQuestionOrder(questions.length > 0 ? Math.max(...questions.map(q => q.order)) + 1 : 1);
-                      setNewQuestionGender('both');
-                      setNewQuestionIsPopup(false);
-                      setNewQuestionIsActive(true);
-                      setNewQuestionOptions([]);
-                    }}
-                    className="shadow-primary/20 flex items-center gap-2 rounded-full px-4 md:px-6 py-2 md:py-3 font-bold shadow-lg text-sm md:text-base"
-                  >
-                    <Plus size={18} /> <span className="hidden sm:inline">Add Question</span><span className="sm:hidden">Add</span>
-                  </Button>
+                  <div className="relative">
+                    <Button
+                      onClick={() => setIsAddDropdownOpen(!isAddDropdownOpen)}
+                      className="shadow-primary/20 flex items-center gap-2 rounded-full px-4 md:px-6 py-2 md:py-3 font-bold shadow-lg text-sm md:text-base"
+                    >
+                      <Plus size={18} /> <span className="hidden sm:inline">Add New</span><span className="sm:hidden">Add</span>
+                      <ChevronRight size={14} className={`transition-transform md:rotate-90 ${isAddDropdownOpen ? 'rotate-[-90deg]' : ''}`} />
+                    </Button>
+
+                    {isAddDropdownOpen && (
+                      <div className="absolute right-0 top-full mt-3 z-30 w-56 overflow-hidden rounded-[24px] border border-[#1a1a1b]/5 bg-white shadow-2xl animate-in fade-in zoom-in-95 slide-in-from-top-2 duration-300 ring-4 ring-black/5">
+                        <button
+                          onClick={() => {
+                            setIsAddDropdownOpen(false);
+                            setIsAddingQuestion(true);
+                            setEditingQuestion(null);
+                            setNewQuestionType('single-select');
+                            setNewQuestionText('');
+                            setNewQuestionGender('both');
+                            setNewQuestionIsPopup(false);
+                            setNewQuestionIsActive(true);
+                            setNewQuestionOptions([]);
+                            setInsertAfterOrderId('last');
+                          }}
+                          className="flex w-full items-center gap-3 px-6 py-5 text-sm font-bold text-foreground hover:bg-muted transition-all group"
+                        >
+                          <div className="h-8 w-8 rounded-full bg-primary/10 text-primary flex items-center justify-center group-hover:scale-110 transition-transform">
+                            <Plus size={16} />
+                          </div>
+                          <div className="text-left">
+                            <p className="block">Normal Question</p>
+                            <span className="text-[10px] text-muted-foreground font-medium">Standard multiple choice etc.</span>
+                          </div>
+                        </button>
+                        <button
+                          onClick={() => {
+                            setIsAddDropdownOpen(false);
+                            setIsAddingQuestion(true);
+                            setEditingQuestion(null);
+                            setNewQuestionType('breakpoint');
+                            setNewQuestionText('Breakpoint Slide');
+                            setNewQuestionGender('both');
+                            setNewQuestionIsPopup(false);
+                            setNewQuestionIsActive(true);
+                            setNewQuestionOptions([]);
+                            setInsertAfterOrderId('last');
+                          }}
+                          className="flex w-full items-center gap-3 px-6 py-5 text-sm font-bold text-foreground hover:bg-muted transition-all border-t border-[#1a1a1b]/5 group"
+                        >
+                          <div className="h-8 w-8 rounded-full bg-orange-500/10 text-orange-500 flex items-center justify-center group-hover:scale-110 transition-transform">
+                            <X size={16} className="rotate-45" />
+                          </div>
+                          <div className="text-left">
+                            <p className="block">Custom Breakpoint</p>
+                            <span className="text-[10px] text-muted-foreground font-medium">Add HTML/CSS/JS content</span>
+                          </div>
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
 
@@ -996,6 +1087,25 @@ export const Dashboard = () => {
                 </div>
                 <div className="space-y-3">
                   <label className="text-muted-foreground pl-1 text-[10px] font-bold tracking-widest uppercase">
+                    Insert After
+                  </label>
+                  <select
+                    value={insertAfterOrderId}
+                    onChange={(e) => setInsertAfterOrderId(e.target.value)}
+                    disabled={!!editingQuestion}
+                    className={`bg-muted/50 focus:bg-background focus:border-primary/20 w-full rounded-xl border-2 border-transparent px-5 py-3 text-sm font-bold transition-all outline-none appearance-none ${editingQuestion ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  >
+                    <option value="last">At the end (Default)</option>
+                    <option value="start">At the beginning</option>
+                    {questions.map((q, idx) => (
+                      <option key={q._id} value={q._id}>
+                        After Q{idx + 1}: {q.questionText.substring(0, 30)}...
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="space-y-3">
+                  <label className="text-muted-foreground pl-1 text-[10px] font-bold tracking-widest uppercase">
                     Gender Target
                   </label>
                   <select
@@ -1033,6 +1143,7 @@ export const Dashboard = () => {
                     { id: 'multi-select', label: 'Multiple', icon: <CheckSquare size={14} /> },
                     { id: 'text-input', label: 'Text', icon: <Edit2 size={14} /> },
                     { id: 'number-input', label: 'Number', icon: <TrendingUp size={14} /> },
+                    { id: 'breakpoint', label: 'Breakpoint', icon: <X size={14} className="rotate-45" /> },
                   ].map((t) => (
                     <div
                       key={t.id}
@@ -1126,6 +1237,201 @@ export const Dashboard = () => {
                 </div>
               )}
 
+              {newQuestionType === 'breakpoint' && (
+                <div className="space-y-8 animate-in slide-in-from-top-6 duration-500 ease-out">
+                  <div className="flex items-center justify-between pb-2 border-b border-[#1a1a1b]/5">
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-2xl bg-orange-500/10 text-orange-600 flex items-center justify-center shadow-inner">
+                        <X size={20} className="rotate-45" />
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-black text-foreground leading-none">Breakpoint Designer</h3>
+                        <p className="text-[11px] text-muted-foreground mt-1 font-medium italic">Create immersive intermediate slides with custom code.</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+                    <div className="space-y-6">
+                      {/* Editor Tabs */}
+                      <div className="bg-muted/30 p-1.5 rounded-2xl flex gap-1 items-center">
+                        <button
+                          onClick={() => setActiveCodeTab('visual')}
+                          className={`flex-1 py-3 px-4 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all ${activeCodeTab === 'visual'
+                              ? 'bg-white text-primary shadow-sm ring-1 ring-[#1a1a1b]/5'
+                              : 'text-muted-foreground hover:text-foreground hover:bg-white/50'
+                            }`}
+                        >
+                          Visual Designer
+                        </button>
+                        <button
+                          onClick={() => setActiveCodeTab('advanced')}
+                          className={`flex-1 py-3 px-4 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all ${activeCodeTab === 'advanced'
+                              ? 'bg-white text-primary shadow-sm ring-1 ring-[#1a1a1b]/5'
+                              : 'text-muted-foreground hover:text-foreground hover:bg-white/50'
+                            }`}
+                        >
+                          Advanced (CSS/JS)
+                        </button>
+                      </div>
+
+                      {/* Visual Editor */}
+                      <div className="animate-in fade-in slide-in-from-left-4 duration-300">
+                        {activeCodeTab === 'visual' && (
+                          <div className="space-y-4">
+                            <label className="text-muted-foreground pl-1 text-[10px] font-black tracking-widest uppercase">
+                              Slide Content
+                            </label>
+                            <div className="quill-wrapper bg-white rounded-2xl overflow-hidden border-2 border-muted/50 focus-within:border-primary/20 transition-all shadow-sm">
+                              <ReactQuill
+                                theme="snow"
+                                value={newCustomHtml}
+                                onChange={setNewCustomHtml}
+                                placeholder="Type your slide content here..."
+                                modules={{
+                                  toolbar: [
+                                    [{ 'header': [1, 2, 3, false] }],
+                                    ['bold', 'italic', 'underline', 'strike'],
+                                    [{ 'color': [] }, { 'background': [] }],
+                                    [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+                                    ['link', 'image'],
+                                    ['clean']
+                                  ],
+                                }}
+                                className="h-[350px] border-none"
+                              />
+                            </div>
+                            <style>{`
+                                .quill-wrapper .ql-toolbar {
+                                    border: none !important;
+                                    border-bottom: 2px solid #f4f4f5 !important;
+                                    padding: 12px !important;
+                                    background: #fafafa !important;
+                                }
+                                .quill-wrapper .ql-container {
+                                    border: none !important;
+                                    font-size: 16px !important;
+                                    font-family: inherit !important;
+                                }
+                                .quill-wrapper .ql-editor {
+                                    padding: 24px !important;
+                                    min-height: 300px !important;
+                                }
+                                .quill-wrapper .ql-editor h1 { font-size: 2.5rem; font-weight: 900; }
+                                .quill-wrapper .ql-editor h2 { font-size: 2rem; font-weight: 800; }
+                                .quill-wrapper .ql-editor h3 { font-size: 1.5rem; font-weight: 700; }
+                            `}</style>
+                          </div>
+                        )}
+
+                        {activeCodeTab === 'advanced' && (
+                          <div className="space-y-6">
+                            <div className="space-y-3">
+                              <label className="text-muted-foreground pl-1 text-[10px] font-black tracking-widest uppercase">
+                                Custom CSS (Advanced)
+                              </label>
+                              <textarea
+                                value={newCustomCss}
+                                onChange={(e) => setNewCustomCss(e.target.value)}
+                                placeholder=".custom-class { color: red; }"
+                                className="bg-[#1a1a1b] text-yellow-200/80 focus:ring-2 focus:ring-primary/20 font-mono w-full h-[180px] rounded-2xl border-none px-6 py-5 text-[13px] leading-relaxed transition-all outline-none resize-none shadow-2xl"
+                              />
+                            </div>
+                            <div className="space-y-3">
+                              <label className="text-muted-foreground pl-1 text-[10px] font-black tracking-widest uppercase">
+                                Custom JS (Advanced)
+                              </label>
+                              <textarea
+                                value={newCustomJs}
+                                onChange={(e) => setNewCustomJs(e.target.value)}
+                                placeholder="console.log('Slide active');"
+                                className="bg-[#1a1a1b] text-blue-300/80 focus:ring-2 focus:ring-primary/20 font-mono w-full h-[180px] rounded-2xl border-none px-6 py-5 text-[13px] leading-relaxed transition-all outline-none resize-none shadow-2xl"
+                              />
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Enhanced Device Preview */}
+                    <div className="space-y-4 flex flex-col">
+                      <div className="flex items-center justify-between">
+                        <label className="text-muted-foreground pl-1 text-[10px] font-black tracking-widest uppercase">
+                          Responsive Preview
+                        </label>
+                        <div className="flex bg-muted/30 p-1 rounded-xl gap-1">
+                          <button
+                            onClick={() => setPreviewSize('mobile')}
+                            className={`p-2 rounded-lg transition-all ${previewSize === 'mobile' ? 'bg-white shadow-sm text-primary' : 'text-muted-foreground'}`}
+                          >
+                            <Smartphone size={14} />
+                          </button>
+                          <button
+                            onClick={() => setPreviewSize('tablet')}
+                            className={`p-2 rounded-lg transition-all ${previewSize === 'tablet' ? 'bg-white shadow-sm text-primary' : 'text-muted-foreground'}`}
+                          >
+                            <Tablet size={14} />
+                          </button>
+                          <button
+                            onClick={() => setPreviewSize('desktop')}
+                            className={`p-2 rounded-lg transition-all ${previewSize === 'desktop' ? 'bg-white shadow-sm text-primary' : 'text-muted-foreground'}`}
+                          >
+                            <Monitor size={14} />
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="flex justify-center flex-1 bg-muted/10 rounded-[32px] p-8 border-2 border-dashed border-[#1a1a1b]/5 min-h-[600px] relative items-center">
+                        <div
+                          className={`relative transition-all duration-500 ease-in-out bg-[#1a1a1b] shadow-[0_50px_100px_-20px_rgba(0,0,0,0.3)] 
+                            ${previewSize === 'mobile' ? 'w-full max-w-[300px] aspect-[9/18.5] rounded-[48px] p-2 ring-8 ring-gray-100 ring-inset' :
+                              previewSize === 'tablet' ? 'w-full max-w-[500px] aspect-[4/3] rounded-[32px] p-3' :
+                                'w-full max-w-[800px] aspect-[16/10] rounded-xl p-4'}`}
+                        >
+                          {/* Device UI elements (only for mobile/tablet) */}
+                          {previewSize !== 'desktop' && (
+                            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-24 h-5 bg-[#1a1a1b] rounded-b-[16px] z-20 flex items-center justify-center gap-2">
+                              <div className="w-8 h-1 rounded-full bg-gray-800" />
+                              <div className="w-1.5 h-1.5 rounded-full bg-gray-800" />
+                            </div>
+                          )}
+
+                          <div className={`w-full h-full bg-white overflow-hidden flex flex-col relative ${previewSize === 'desktop' ? 'rounded-lg' : previewSize === 'tablet' ? 'rounded-[20px]' : 'rounded-[38px]'}`}>
+                            <style dangerouslySetInnerHTML={{ __html: newCustomCss }} />
+
+                            <div className="h-10 px-6 flex items-center justify-between text-[10px] font-black text-[#1a1a1b] opacity-40">
+                              <span>9:41</span>
+                              <div className="flex items-center gap-1.5">
+                                <Search size={10} />
+                                <div className="h-2 w-3.5 rounded-[1px] border border-black/40" />
+                              </div>
+                            </div>
+
+                            <div
+                              className="flex-1 overflow-y-auto custom-scrollbar p-6"
+                              dangerouslySetInnerHTML={{ __html: newCustomHtml || '<div class="flex items-center justify-center h-full text-muted-foreground/30 text-[10px] font-bold uppercase tracking-widest">Preview Area</div>' }}
+                            />
+
+                            <div className="p-6 pt-0 mt-auto bg-white flex justify-center pb-8">
+                              <button disabled className="w-full h-12 rounded-full bg-[#1a1a1b] text-white text-[14px] font-black opacity-90">
+                                Continue
+                              </button>
+                            </div>
+
+                            {/* Enlarge Overlay */}
+                            <div className="absolute inset-0 bg-black/0 hover:bg-black/5 transition-all flex items-center justify-center group cursor-pointer" onClick={() => setIsEnlargedPreviewOpen(true)}>
+                              <div className="bg-white/90 backdrop-blur shadow-2xl h-12 w-12 rounded-full flex items-center justify-center scale-0 group-hover:scale-100 transition-transform">
+                                <Maximize size={20} className="text-primary" />
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               <div className="flex items-center gap-3 pt-6 border-t border-[#1a1a1b]/5">
                 <Button
                   onClick={closeModal}
@@ -1147,6 +1453,58 @@ export const Dashboard = () => {
           </Card>
         </div>
       )}
+      {/* --- Enlarged Preview Modal --- */}
+      {isEnlargedPreviewOpen && (
+        <div className="fixed inset-0 z-[100] bg-[#1a1a1b]/95 backdrop-blur-xl flex flex-col items-center justify-center p-4 md:p-10 animate-in fade-in duration-300">
+          <div className="absolute top-8 right-8 flex gap-4">
+            <div className="flex bg-[#1a1a1b] p-1.5 rounded-2xl gap-1 ring-1 ring-white/10">
+              <button
+                onClick={() => setPreviewSize('mobile')}
+                className={`px-4 py-2 rounded-xl text-[10px] font-black tracking-widest uppercase flex items-center gap-2 transition-all ${previewSize === 'mobile' ? 'bg-white text-primary' : 'text-white/40 hover:text-white'}`}
+              >
+                <Smartphone size={14} /> Mobile
+              </button>
+              <button
+                onClick={() => setPreviewSize('tablet')}
+                className={`px-4 py-2 rounded-xl text-[10px] font-black tracking-widest uppercase flex items-center gap-2 transition-all ${previewSize === 'tablet' ? 'bg-white text-primary' : 'text-white/40 hover:text-white'}`}
+              >
+                <Tablet size={14} /> Tablet
+              </button>
+              <button
+                onClick={() => setPreviewSize('desktop')}
+                className={`px-4 py-2 rounded-xl text-[10px] font-black tracking-widest uppercase flex items-center gap-2 transition-all ${previewSize === 'desktop' ? 'bg-white text-primary' : 'text-white/40 hover:text-white'}`}
+              >
+                <Monitor size={14} /> Desktop
+              </button>
+            </div>
+            <Button
+              variant="ghost"
+              onClick={() => setIsEnlargedPreviewOpen(false)}
+              className="h-12 w-12 rounded-full bg-white/10 text-white hover:bg-white/20"
+            >
+              <X size={24} />
+            </Button>
+          </div>
+
+          <div className={`transition-all duration-500 ease-in-out bg-white overflow-hidden shadow-2xl relative flex flex-col
+                ${previewSize === 'mobile' ? 'w-full max-w-[375px] h-[812px] rounded-[48px]' :
+              previewSize === 'tablet' ? 'w-full max-w-[1024px] h-[768px] rounded-[32px]' :
+                'w-full max-w-[1440px] h-[900px] rounded-2xl'}`}
+          >
+            <style dangerouslySetInnerHTML={{ __html: newCustomCss }} />
+            <div className="flex-1 overflow-y-auto custom-scrollbar p-12 md:p-20">
+              <div dangerouslySetInnerHTML={{ __html: newCustomHtml || '<p class="text-center text-muted-foreground uppercase tracking-widest font-black text-sm">No content to display</p>' }} />
+            </div>
+            <div className="p-10 border-t bg-white/80 backdrop-blur-sm flex justify-center">
+              <button className="w-full max-w-md h-16 rounded-full bg-[#1a1a1b] text-white text-xl font-black shadow-xl">
+                Continue
+              </button>
+            </div>
+          </div>
+          <p className="mt-8 text-white/40 text-[10px] font-black tracking-[0.3em] uppercase">Press ESC or click close to return to editor</p>
+        </div>
+      )}
+
       {/* --- Submission Details Modal --- */}
       {isSubmissionModalOpen && selectedSubmission && (
         <div className="animate-in fade-in fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm duration-200">

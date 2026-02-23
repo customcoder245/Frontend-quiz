@@ -10,9 +10,12 @@ interface Option {
 interface Question {
     _id: string;
     questionText: string;
-    type: 'single-select' | 'multi-select' | 'text-input' | 'number-input';
+    type: 'single-select' | 'multi-select' | 'text-input' | 'number-input' | 'breakpoint';
     options: Option[];
     subtitle?: string;
+    customHtml?: string;
+    customCss?: string;
+    customJs?: string;
 }
 
 export default function QuizPage() {
@@ -47,8 +50,49 @@ export default function QuizPage() {
         fetchQuestions();
     }, [gender, API_BASE_URL]);
 
+    // Handle Custom CSS and JS for Breakpoints
+    useEffect(() => {
+        const currentQuestion = questions[currentIndex];
+        if (currentQuestion?.type === 'breakpoint') {
+            // Inject CSS
+            if (currentQuestion.customCss) {
+                const styleId = `custom-css-${currentQuestion._id}`;
+                if (!document.getElementById(styleId)) {
+                    const style = document.createElement('style');
+                    style.id = styleId;
+                    style.innerHTML = currentQuestion.customCss;
+                    document.head.appendChild(style);
+                }
+            }
+
+            // Execute JS
+            if (currentQuestion.customJs) {
+                try {
+                    // eslint-disable-next-line no-new-func
+                    const runScript = new Function(currentQuestion.customJs);
+                    runScript();
+                } catch (err) {
+                    console.error('Error in Breakpoint JS:', err);
+                }
+            }
+        }
+
+        return () => {
+            // Optional: Cleanup CSS if needed
+            // const styleId = `custom-css-${currentQuestion?._id}`;
+            // document.getElementById(styleId)?.remove();
+        };
+    }, [currentIndex, questions]);
+
     const handleNext = () => {
         const currentQuestion = questions[currentIndex];
+
+        if (currentQuestion.type === 'breakpoint') {
+            // No response to save for breakpoints
+            moveToNext();
+            return;
+        }
+
         let answer: any;
 
         if (currentQuestion.type === 'multi-select') {
@@ -94,14 +138,18 @@ export default function QuizPage() {
         sessionStorage.setItem('quizGender', gender);
 
         setTimeout(() => {
-            if (currentIndex < questions.length - 1) {
-                setCurrentIndex(currentIndex + 1);
-                setSelectedOptions([]);
-                setInputValue('');
-            } else {
-                navigate('/email-form');
-            }
+            moveToNext();
         }, 500);
+    };
+
+    const moveToNext = () => {
+        if (currentIndex < questions.length - 1) {
+            setCurrentIndex(currentIndex + 1);
+            setSelectedOptions([]);
+            setInputValue('');
+        } else {
+            navigate('/email-form');
+        }
     };
 
     if (loading) {
@@ -174,7 +222,22 @@ export default function QuizPage() {
                 </div>
 
                 <div className="w-full space-y-4">
-                    {currentQuestion.type === 'text-input' || currentQuestion.type === 'number-input' ? (
+                    {currentQuestion.type === 'breakpoint' ? (
+                        <div className="w-full animate-in fade-in slide-in-from-bottom-4 duration-700">
+                            <div
+                                className="breakpoint-container"
+                                dangerouslySetInnerHTML={{ __html: currentQuestion.customHtml || '' }}
+                            />
+                            <div className="mt-12 flex justify-center">
+                                <button
+                                    onClick={handleNext}
+                                    className="w-full max-w-md h-16 rounded-full bg-[#1a1a1b] text-white text-xl font-black shadow-xl transition-transform hover:scale-[1.02] active:scale-[0.98]"
+                                >
+                                    Continue
+                                </button>
+                            </div>
+                        </div>
+                    ) : currentQuestion.type === 'text-input' || currentQuestion.type === 'number-input' ? (
                         <div className="space-y-6">
                             <input
                                 type={currentQuestion.type === 'number-input' ? 'number' : 'text'}
