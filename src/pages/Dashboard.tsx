@@ -26,6 +26,8 @@ import {
   LogOut,
   Menu,
   Settings,
+  ChevronUp,
+  ChevronDown,
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import {
@@ -40,6 +42,7 @@ import {
 interface Option {
   text: string;
   emoji: string;
+  score: number;
 }
 
 interface Question {
@@ -54,6 +57,8 @@ interface Question {
   customHtml?: string;
   customCss?: string;
   customJs?: string;
+  classid: string;
+  attributeId: string;
 }
 
 interface Submission {
@@ -154,6 +159,92 @@ export const Dashboard = () => {
   const [newCustomHtml, setNewCustomHtml] = useState('');
   const [newCustomCss, setNewCustomCss] = useState('');
   const [newCustomJs, setNewCustomJs] = useState('');
+  const [newQuestionClassId, setNewQuestionClassId] = useState('');
+  const [newQuestionAttributeId, setNewQuestionAttributeId] = useState('');
+
+  // --- Reorder Logic ---
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [dropTargetIndex, setDropTargetIndex] = useState<number | null>(null);
+
+  const handleDragStart = (e: React.DragEvent, index: number) => {
+    setDraggedIndex(index);
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', index.toString());
+    // Use a small timeout so the drag image is captured before the opacity change
+    setTimeout(() => {
+      if (e.target) (e.target as HTMLElement).classList.add('opacity-20');
+    }, 0);
+  };
+
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    if (index !== draggedIndex) {
+      setDropTargetIndex(index);
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    const sourceIndex = draggedIndex;
+    setDraggedIndex(null);
+    setDropTargetIndex(null);
+
+    if (sourceIndex === null || sourceIndex === index) return;
+
+    performReorder(sourceIndex, index);
+  };
+
+  const performReorder = (from: number, to: number) => {
+    const newQuestions = [...questions];
+    const [movedItem] = newQuestions.splice(from, 1);
+    newQuestions.splice(to, 0, movedItem);
+
+    const withNewOrders = newQuestions.map((q, i) => ({ ...q, order: i + 1 }));
+    setQuestions(withNewOrders);
+
+    const validIds = withNewOrders
+      .map(q => q._id)
+      .filter((id): id is string => !!id && typeof id === 'string');
+
+    if (validIds.length > 0) {
+      handleReorderBackend(validIds);
+    }
+  };
+
+  const moveQuestion = (index: number, direction: 'up' | 'down') => {
+    const targetIndex = direction === 'up' ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= questions.length) return;
+    performReorder(index, targetIndex);
+  };
+
+  const handleReorderBackend = async (orderedIds: string[]) => {
+    try {
+      const resp = await fetch(`${API_URL}/questions/reorder`, {
+        method: 'POST',
+        headers: getHeaders(),
+        body: JSON.stringify({ orderedIds }),
+      });
+
+      if (!resp.ok) {
+        const errorData = await resp.json().catch(() => ({}));
+        console.error('Reorder failed on server:', resp.status, errorData);
+        alert(`Server Error (${resp.status}): ${errorData.message || 'Unknown error'}${errorData.error ? '\nDetails: ' + errorData.error : ''}`);
+
+        // Re-fetch from server to reset UI to last known good state
+        const fresh = await fetch(`${API_URL}/questions?includeInactive=true`, {
+          headers: getHeaders(),
+        });
+        if (fresh.ok) {
+          const data = await fresh.json();
+          setQuestions((data.questions || []).sort((a: Question, b: Question) => a.order - b.order));
+        }
+      }
+    } catch (err: any) {
+      console.error('Failed to persist question order:', err);
+      alert('Network Error: Failed to connect to server for reordering.');
+    }
+  };
 
   const constructSrcDoc = (html: string, css?: string, js?: string) => {
     if (!html) return `<html><body style="margin:0;display:flex;align-items:center;justify-content:center;height:100vh;background:white;color:#eee;font-family:sans-serif;"><h1 style="font-size:10vw;font-weight:900;margin:0;">PREVIEW</h1></body></html>`;
@@ -336,6 +427,8 @@ export const Dashboard = () => {
       customHtml: newCustomHtml,
       customCss: newCustomCss,
       customJs: newCustomJs,
+      classid: newQuestionClassId,
+      attributeId: newQuestionAttributeId,
     };
 
     try {
@@ -397,6 +490,8 @@ export const Dashboard = () => {
     setNewCustomHtml(q.customHtml || '');
     setNewCustomCss(q.customCss || '');
     setNewCustomJs(q.customJs || '');
+    setNewQuestionClassId(q.classid || '');
+    setNewQuestionAttributeId(q.attributeId || '');
     setIsAddingQuestion(true);
   };
 
@@ -413,6 +508,8 @@ export const Dashboard = () => {
     setNewCustomHtml('');
     setNewCustomCss('');
     setNewCustomJs('');
+    setNewQuestionClassId('');
+    setNewQuestionAttributeId('');
   };
 
   const handleDeleteQuestion = async (id: string) => {
@@ -432,10 +529,13 @@ export const Dashboard = () => {
   };
 
   const handleAddOption = () => {
-    setNewQuestionOptions([...newQuestionOptions, { text: '', emoji: '' }]);
+    setNewQuestionOptions([
+      ...newQuestionOptions,
+      { text: '', emoji: '', score: 0 },
+    ]);
   };
 
-  const handleUpdateOption = (index: number, field: keyof Option, value: string) => {
+  const handleUpdateOption = (index: number, field: keyof Option, value: any) => {
     const updated = [...newQuestionOptions];
     updated[index] = { ...updated[index], [field]: value };
     setNewQuestionOptions(updated);
@@ -449,30 +549,30 @@ export const Dashboard = () => {
     if (!confirm('This will add the default set of questions to your database. Continue?')) return;
 
     const defaultQuestions: Partial<Question>[] = [
-      { order: 2, questionText: "How old are you?", type: "single-select", gender: "both", options: [{ text: "Under 30", emoji: "🧒" }, { text: "30–39", emoji: "🧑" }, { text: "40–49", emoji: "🧑‍🦳" }, { text: "50–59", emoji: "👴" }, { text: "60+", emoji: "🧓" }], isPopup: false, isActive: true },
-      { order: 3, questionText: "How familiar are you with the Mediterranean Diet?", type: "single-select", gender: "both", options: [{ text: "Beginner", emoji: "🌱" }, { text: "I know the basics", emoji: "📖" }, { text: "I've tried it before, but didn't stick with it", emoji: "🔄" }, { text: "I know it pretty well", emoji: "✅" }], isPopup: false, isActive: true },
-      { order: 4, questionText: "What is your main goal right now?", type: "single-select", gender: "both", options: [{ text: "Improve my health", emoji: "❤️" }, { text: "Feel more confident", emoji: "💪" }, { text: "Look better", emoji: "✨" }, { text: "Increase energy", emoji: "⚡" }, { text: "Set a good example for my family", emoji: "👨‍👩‍👧" }, { text: "Feel better day to day", emoji: "🌞" }], isPopup: false, isActive: true },
-      { order: 5, questionText: "Where are the areas you would like to improve the most?", type: "multi-select", gender: "male", options: [{ text: "Belly / waist", emoji: "🎯" }, { text: "Chest", emoji: "💪" }, { text: "Arms", emoji: "🦾" }, { text: "Back", emoji: "🏋️" }, { text: "Overall fitness", emoji: "🏃" }], isPopup: false, isActive: true },
-      { order: 6, questionText: "Where are the areas you would like to improve the most?", type: "multi-select", gender: "female", options: [{ text: "Belly / waist", emoji: "🎯" }, { text: "Hips & thighs", emoji: "🍑" }, { text: "Arms", emoji: "🦾" }, { text: "Bust / chest", emoji: "💕" }, { text: "Overall fitness", emoji: "🏃‍♀️" }], isPopup: false, isActive: true },
-      { order: 7, questionText: "What is your height?", type: "text-input", gender: "both", options: [], isPopup: false, isActive: true },
-      { order: 8, questionText: "What is your current weight?", type: "number-input", gender: "both", options: [], isPopup: false, isActive: true },
-      { order: 9, questionText: "What is your goal weight?", type: "number-input", gender: "both", options: [], isPopup: false, isActive: true },
-      { order: 10, questionText: "What was the first sign your body was starting to change?", type: "single-select", gender: "both", options: [{ text: "Stubborn weight gain (especially around the belly)", emoji: "⚖️" }, { text: "Bloating or digestive discomfort", emoji: "🫃" }, { text: "Brain fog or memory lapses", emoji: "☁️" }, { text: "Mood swings or irritability", emoji: "😤" }, { text: "Poor or disrupted sleep", emoji: "😴" }, { text: "Fatigue or low energy", emoji: "🔋" }, { text: "Cravings or emotional eating", emoji: "🍫" }], isPopup: false, isActive: true },
-      { order: 11, questionText: "How does your hunger feel throughout the day?", type: "single-select", gender: "both", options: [{ text: "Steady at meals", emoji: "🍽️" }, { text: "Not hungry earlier, more hungry at night", emoji: "🌙" }, { text: "Grazing all day", emoji: "🐑" }, { text: "Up and down depending on stress or tiredness", emoji: "📈" }], isPopup: false, isActive: true },
-      { order: 12, questionText: "When cravings hit, what do you reach for?", type: "single-select", gender: "both", options: [{ text: "Sugar and desserts", emoji: "🍰" }, { text: "Salty or crunchy snacks", emoji: "🥨" }, { text: "Fatty foods", emoji: "🍟" }, { text: "It depends on my stress levels", emoji: "😰" }, { text: "I don't get cravings", emoji: "🙅" }], isPopup: false, isActive: true },
-      { order: 13, questionText: "Which energy pattern sounds most like you?", type: "single-select", gender: "both", options: [{ text: "Always tired", emoji: "😴" }, { text: "Afternoon slump", emoji: "📉" }, { text: "Up and down", emoji: "🎢" }, { text: "Mostly steady", emoji: "⚡" }], isPopup: false, isActive: true },
-      { order: 14, questionText: "How often do you experience puffiness or bloating?", type: "single-select", gender: "both", options: [{ text: "Rarely", emoji: "✅" }, { text: "A few times a week", emoji: "📅" }, { text: "Most days", emoji: "😕" }, { text: "Constantly", emoji: "😩" }], isPopup: false, isActive: true },
-      { order: 15, questionText: "How often do you feel stressed or overwhelmed?", type: "single-select", gender: "both", options: [{ text: "Almost always", emoji: "🤯" }, { text: "Several times a day", emoji: "😰" }, { text: "Occasionally", emoji: "😐" }, { text: "Rarely", emoji: "😌" }], isPopup: false, isActive: true },
-      { order: 16, questionText: "How active are you right now?", type: "single-select", gender: "both", options: [{ text: "Very active (5+ workouts/week)", emoji: "🏋️" }, { text: "Somewhat active (2–4 workouts/week)", emoji: "🚴" }, { text: "Light activity", emoji: "🚶" }, { text: "Not active", emoji: "🛋️" }], isPopup: false, isActive: true },
-      { order: 17, questionText: "How is your sleep, on average?", type: "single-select", gender: "both", options: [{ text: "Very poor", emoji: "😖" }, { text: "Broken or inconsistent", emoji: "🌀" }, { text: "Mostly okay", emoji: "😐" }, { text: "Consistent and restful", emoji: "😴" }], isPopup: false, isActive: true },
-      { order: 18, questionText: "Are you working toward a specific event?", type: "single-select", gender: "both", options: [{ text: "Yes, within 4 weeks", emoji: "📅" }, { text: "Yes, 1–3 months away", emoji: "🗓️" }, { text: "Yes, later this year", emoji: "🎯" }, { text: "No specific event", emoji: "🙂" }], isPopup: false, isActive: true },
-      { order: 19, questionText: "Any dietary preferences or restrictions?", type: "multi-select", gender: "both", options: [{ text: "Everything", emoji: "🍽️" }, { text: "Vegan", emoji: "🌿" }, { text: "Vegetarian", emoji: "🥦" }, { text: "Gluten Free", emoji: "🌾" }, { text: "Dairy Free", emoji: "🥛" }, { text: "Pescatarian", emoji: "🐟" }], isPopup: false, isActive: true },
-      { order: 20, questionText: "Select your preferred protein sources", type: "multi-select", gender: "both", options: [{ text: "Fish (salmon, tuna, sardines)", emoji: "🐟" }, { text: "Shellfish (prawns, mussels, calamari)", emoji: "🦐" }, { text: "Chicken or turkey", emoji: "🍗" }, { text: "Eggs", emoji: "🥚" }, { text: "Greek yogurt, cottage cheese, or cheese", emoji: "🧀" }, { text: "Legumes (lentils, chickpeas, beans)", emoji: "🫘" }, { text: "Tofu or tempeh", emoji: "🌱" }, { text: "Red meat (beef, lamb, pork)", emoji: "🥩" }, { text: "Plant-based protein alternatives", emoji: "🌿" }, { text: "No strong preference", emoji: "🤷" }], isPopup: false, isActive: true },
-      { order: 21, questionText: "Which vegetables do you enjoy eating regularly?", type: "multi-select", gender: "both", options: [{ text: "Leafy greens (spinach, kale, rocket)", emoji: "🥬" }, { text: "Tomatoes", emoji: "🍅" }, { text: "Peppers (capsicum)", emoji: "🫑" }, { text: "Zucchini or eggplant", emoji: "🥒" }, { text: "Broccoli or cauliflower", emoji: "🥦" }, { text: "Root vegetables (carrots, sweet potato, beetroot)", emoji: "🥕" }, { text: "Onions, garlic, leeks", emoji: "🧅" }, { text: "Mushrooms", emoji: "🍄" }, { text: "Legumes (beans, lentils)", emoji: "🫘" }, { text: "I struggle to eat vegetables", emoji: "😅" }], isPopup: false, isActive: true },
-      { order: 22, questionText: "Which fruits do you enjoy eating regularly?", type: "multi-select", gender: "both", options: [{ text: "Berries (strawberries, blueberries, raspberries)", emoji: "🍓" }, { text: "Citrus fruits (oranges, mandarins, lemons)", emoji: "🍊" }, { text: "Apples or pears", emoji: "🍎" }, { text: "Bananas", emoji: "🍌" }, { text: "Stone fruit (peaches, nectarines, plums)", emoji: "🍑" }, { text: "Grapes", emoji: "🍇" }, { text: "Melon", emoji: "🍈" }, { text: "Figs or dates", emoji: "🫐" }, { text: "I don't eat much fruit", emoji: "😐" }, { text: "No strong preference", emoji: "🤷" }], isPopup: false, isActive: true },
-      { order: 23, questionText: "Which meal style suits you best?", type: "single-select", gender: "both", options: [{ text: "3 Balanced meals per day", emoji: "🍽️" }, { text: "2 Meals with snacks", emoji: "🥙" }, { text: "Light meals throughout the day", emoji: "🥗" }, { text: "I'm not sure - I need guidance", emoji: "🤔" }], isPopup: false, isActive: true },
-      { order: 24, questionText: "How likely are you to finish what you start when it comes to health goals?", type: "single-select", gender: "both", isPopup: true, options: [{ text: "Very likely — I follow through", emoji: "🏆" }, { text: "I start strong but lose momentum", emoji: "📉" }, { text: "I struggle to stay consistent", emoji: "😓" }, { text: "I usually stop once life gets busy", emoji: "⏸️" }], isActive: true },
-      { order: 25, questionText: "What usually gets in the way when things don't stick?", type: "single-select", gender: "both", isPopup: true, options: [{ text: "Plans are too complicated", emoji: "🤯" }, { text: "I don't see results quickly enough", emoji: "⏳" }, { text: "My routine changes week to week", emoji: "🔄" }, { text: "I lose motivation over time", emoji: "😔" }], isActive: true },
+      { order: 2, questionText: "How old are you?", type: "single-select", gender: "both", options: [{ text: "Under 30", emoji: "🧒", score: 0 }, { text: "30–39", emoji: "🧑", score: 0 }, { text: "40–49", emoji: "🧑‍🦳", score: 0 }, { text: "50–59", emoji: "👴", score: 0 }, { text: "60+", emoji: "🧓", score: 0 }], isPopup: false, isActive: true, classid: "", attributeId: "" },
+      { order: 3, questionText: "How familiar are you with the Mediterranean Diet?", type: "single-select", gender: "both", options: [{ text: "Beginner", emoji: "🌱", score: 0 }, { text: "I know the basics", emoji: "📖", score: 0 }, { text: "I've tried it before, but didn't stick with it", emoji: "🔄", score: 0 }, { text: "I know it pretty well", emoji: "✅", score: 0 }], isPopup: false, isActive: true, classid: "", attributeId: "" },
+      { order: 4, questionText: "What is your main goal right now?", type: "single-select", gender: "both", options: [{ text: "Improve my health", emoji: "❤️", score: 0 }, { text: "Feel more confident", emoji: "💪", score: 0 }, { text: "Look better", emoji: "✨", score: 0 }, { text: "Increase energy", emoji: "⚡", score: 0 }, { text: "Set a good example for my family", emoji: "👨‍👩‍👧", score: 0 }, { text: "Feel better day to day", emoji: "🌞", score: 0 }], isPopup: false, isActive: true, classid: "", attributeId: "" },
+      { order: 5, questionText: "Where are the areas you would like to improve the most?", type: "multi-select", gender: "male", options: [{ text: "Belly / waist", emoji: "🎯", score: 0 }, { text: "Chest", emoji: "💪", score: 0 }, { text: "Arms", emoji: "🦾", score: 0 }, { text: "Back", emoji: "🏋️", score: 0 }, { text: "Overall fitness", emoji: "🏃", score: 0 }], isPopup: false, isActive: true, classid: "", attributeId: "" },
+      { order: 6, questionText: "Where are the areas you would like to improve the most?", type: "multi-select", gender: "female", options: [{ text: "Belly / waist", emoji: "🎯", score: 0 }, { text: "Hips & thighs", emoji: "🍑", score: 0 }, { text: "Arms", emoji: "🦾", score: 0 }, { text: "Bust / chest", emoji: "💕", score: 0 }, { text: "Overall fitness", emoji: "🏃‍♀️", score: 0 }], isPopup: false, isActive: true, classid: "", attributeId: "" },
+      { order: 7, questionText: "What is your height?", type: "text-input", gender: "both", options: [], isPopup: false, isActive: true, classid: "", attributeId: "" },
+      { order: 8, questionText: "What is your current weight?", type: "number-input", gender: "both", options: [], isPopup: false, isActive: true, classid: "", attributeId: "" },
+      { order: 9, questionText: "What is your goal weight?", type: "number-input", gender: "both", options: [], isPopup: false, isActive: true, classid: "", attributeId: "" },
+      { order: 10, questionText: "What was the first sign your body was starting to change?", type: "single-select", gender: "both", options: [{ text: "Stubborn weight gain (especially around the belly)", emoji: "⚖️", score: 0 }, { text: "Bloating or digestive discomfort", emoji: "🫃", score: 0 }, { text: "Brain fog or memory lapses", emoji: "☁️", score: 0 }, { text: "Mood swings or irritability", emoji: "😤", score: 0 }, { text: "Poor or disrupted sleep", emoji: "😴", score: 0 }, { text: "Fatigue or low energy", emoji: "🔋", score: 0 }, { text: "Cravings or emotional eating", emoji: "🍫", score: 0 }], isPopup: false, isActive: true, classid: "", attributeId: "" },
+      { order: 11, questionText: "How does your hunger feel throughout the day?", type: "single-select", gender: "both", options: [{ text: "Steady at meals", emoji: "🍽️", score: 0 }, { text: "Not hungry earlier, more hungry at night", emoji: "🌙", score: 0 }, { text: "Grazing all day", emoji: "🐑", score: 0 }, { text: "Up and down depending on stress or tiredness", emoji: "📈", score: 0 }], isPopup: false, isActive: true, classid: "", attributeId: "" },
+      { order: 12, questionText: "When cravings hit, what do you reach for?", type: "single-select", gender: "both", options: [{ text: "Sugar and desserts", emoji: "🍰", score: 0 }, { text: "Salty or crunchy snacks", emoji: "🥨", score: 0 }, { text: "Fatty foods", emoji: "🍟", score: 0 }, { text: "It depends on my stress levels", emoji: "😰", score: 0 }, { text: "I don't get cravings", emoji: "🙅", score: 0 }], isPopup: false, isActive: true, classid: "", attributeId: "" },
+      { order: 13, questionText: "Which energy pattern sounds most like you?", type: "single-select", gender: "both", options: [{ text: "Always tired", emoji: "😴", score: 0 }, { text: "Afternoon slump", emoji: "📉", score: 0 }, { text: "Up and down", emoji: "🎢", score: 0 }, { text: "Mostly steady", emoji: "⚡", score: 0 }], isPopup: false, isActive: true, classid: "", attributeId: "" },
+      { order: 14, questionText: "How often do you experience puffiness or bloating?", type: "single-select", gender: "both", options: [{ text: "Rarely", emoji: "✅", score: 0 }, { text: "A few times a week", emoji: "📅", score: 0 }, { text: "Most days", emoji: "😕", score: 0 }, { text: "Constantly", emoji: "😩", score: 0 }], isPopup: false, isActive: true, classid: "", attributeId: "" },
+      { order: 15, questionText: "How often do you feel stressed or overwhelmed?", type: "single-select", gender: "both", options: [{ text: "Almost always", emoji: "🤯", score: 0 }, { text: "Several times a day", emoji: "😰", score: 0 }, { text: "Occasionally", emoji: "😐", score: 0 }, { text: "Rarely", emoji: "😌", score: 0 }], isPopup: false, isActive: true, classid: "", attributeId: "" },
+      { order: 16, questionText: "How active are you right now?", type: "single-select", gender: "both", options: [{ text: "Very active (5+ workouts/week)", emoji: "🏋️", score: 0 }, { text: "Somewhat active (2–4 workouts/week)", emoji: "🚴", score: 0 }, { text: "Light activity", emoji: "🚶", score: 0 }, { text: "Not active", emoji: "🛋️", score: 0 }], isPopup: false, isActive: true, classid: "", attributeId: "" },
+      { order: 17, questionText: "How is your sleep, on average?", type: "single-select", gender: "both", options: [{ text: "Very poor", emoji: "😖", score: 0 }, { text: "Broken or inconsistent", emoji: "🌀", score: 0 }, { text: "Mostly okay", emoji: "😐", score: 0 }, { text: "Consistent and restful", emoji: "😴", score: 0 }], isPopup: false, isActive: true, classid: "", attributeId: "" },
+      { order: 18, questionText: "Are you working toward a specific event?", type: "single-select", gender: "both", options: [{ text: "Yes, within 4 weeks", emoji: "📅", score: 0 }, { text: "Yes, 1–3 months away", emoji: "🗓️", score: 0 }, { text: "Yes, later this year", emoji: "🎯", score: 0 }, { text: "No specific event", emoji: "🙂", score: 0 }], isPopup: false, isActive: true, classid: "", attributeId: "" },
+      { order: 19, questionText: "Any dietary preferences or restrictions?", type: "multi-select", gender: "both", options: [{ text: "Everything", emoji: "🍽️", score: 0 }, { text: "Vegan", emoji: "🌿", score: 0 }, { text: "Vegetarian", emoji: "🥦", score: 0 }, { text: "Gluten Free", emoji: "🌾", score: 0 }, { text: "Dairy Free", emoji: "🥛", score: 0 }, { text: "Pescatarian", emoji: "🐟", score: 0 }], isPopup: false, isActive: true, classid: "", attributeId: "" },
+      { order: 20, questionText: "Select your preferred protein sources", type: "multi-select", gender: "both", options: [{ text: "Fish (salmon, tuna, sardines)", emoji: "🐟", score: 0 }, { text: "Shellfish (prawns, mussels, calamari)", emoji: "🦐", score: 0 }, { text: "Chicken or turkey", emoji: "🍗", score: 0 }, { text: "Eggs", emoji: "🥚", score: 0 }, { text: "Greek yogurt, cottage cheese, or cheese", emoji: "🧀", score: 0 }, { text: "Legumes (lentils, chickpeas, beans)", emoji: "🫘", score: 0 }, { text: "Tofu or tempeh", emoji: "🌱", score: 0 }, { text: "Red meat (beef, lamb, pork)", emoji: "🥩", score: 0 }, { text: "Plant-based protein alternatives", emoji: "🌿", score: 0 }, { text: "No strong preference", emoji: "🤷", score: 0 }], isPopup: false, isActive: true, classid: "", attributeId: "" },
+      { order: 21, questionText: "Which vegetables do you enjoy eating regularly?", type: "multi-select", gender: "both", options: [{ text: "Leafy greens (spinach, kale, rocket)", emoji: "🥬", score: 0 }, { text: "Tomatoes", emoji: "🍅", score: 0 }, { text: "Peppers (capsicum)", emoji: "🫑", score: 0 }, { text: "Zucchini or eggplant", emoji: "🥒", score: 0 }, { text: "Broccoli or cauliflower", emoji: "🥦", score: 0 }, { text: "Root vegetables (carrots, sweet potato, beetroot)", emoji: "🥕", score: 0 }, { text: "Onions, garlic, leeks", emoji: "🧅", score: 0 }, { text: "Mushrooms", emoji: "🍄", score: 0 }, { text: "Legumes (beans, lentils)", emoji: "🫘", score: 0 }, { text: "I struggle to eat vegetables", emoji: "😅", score: 0 }], isPopup: false, isActive: true, classid: "", attributeId: "" },
+      { order: 22, questionText: "Which fruits do you enjoy eating regularly?", type: "multi-select", gender: "both", options: [{ text: "Berries (strawberries, blueberries, raspberries)", emoji: "🍓", score: 0 }, { text: "Citrus fruits (oranges, mandarins, lemons)", emoji: "🍊", score: 0 }, { text: "Apples or pears", emoji: "🍎", score: 0 }, { text: "Bananas", emoji: "🍌", score: 0 }, { text: "Stone fruit (peaches, nectarines, plums)", emoji: "🍑", score: 0 }, { text: "Grapes", emoji: "🍇", score: 0 }, { text: "Melon", emoji: "🍈", score: 0 }, { text: "Figs or dates", emoji: "🫐", score: 0 }, { text: "I don't eat much fruit", emoji: "😐", score: 0 }, { text: "No strong preference", emoji: "🤷", score: 0 }], isPopup: false, isActive: true, classid: "", attributeId: "" },
+      { order: 23, questionText: "Which meal style suits you best?", type: "single-select", gender: "both", options: [{ text: "3 Balanced meals per day", emoji: "🍽️", score: 0 }, { text: "2 Meals with snacks", emoji: "🥙", score: 0 }, { text: "Light meals throughout the day", emoji: "🥗", score: 0 }, { text: "I'm not sure - I need guidance", emoji: "🤔", score: 0 }], isPopup: false, isActive: true, classid: "", attributeId: "" },
+      { order: 24, questionText: "How likely are you to finish what you start when it comes to health goals?", type: "single-select", gender: "both", isPopup: true, options: [{ text: "Very likely — I follow through", emoji: "🏆", score: 0 }, { text: "I start strong but lose momentum", emoji: "📉", score: 0 }, { text: "I struggle to stay consistent", emoji: "😓", score: 0 }, { text: "I usually stop once life gets busy", emoji: "⏸️", score: 0 }], isActive: true, classid: "", attributeId: "" },
+      { order: 25, questionText: "What usually gets in the way when things don't stick?", type: "single-select", gender: "both", isPopup: true, options: [{ text: "Plans are too complicated", emoji: "🤯", score: 0 }, { text: "I don't see results quickly enough", emoji: "⏳", score: 0 }, { text: "My routine changes week to week", emoji: "🔄", score: 0 }, { text: "I lose motivation over time", emoji: "😔", score: 0 }], isActive: true, classid: "", attributeId: "" },
     ];
 
     setLoadingQuestions(true);
@@ -953,74 +1053,112 @@ export const Dashboard = () => {
                   {questions.map((q, index) => (
                     <div
                       key={q._id}
-                      className={`hover:border-primary/20 group flex rounded-3xl border border-transparent bg-white p-1 shadow-sm transition-all ${!q.isActive ? 'opacity-60' : ''}`}
+                      onDragOver={(e) => handleDragOver(e, index)}
+                      onDrop={(e) => handleDrop(e, index)}
                     >
-                      {/* Numbering Column */}
-                      <div className="bg-muted/50 hidden sm:flex w-16 flex-col items-center justify-center gap-2 rounded-l-[20px] rounded-r-lg">
-                        <span className="text-muted-foreground/40 text-2xl font-black">
-                          {index + 1}
-                        </span>
-                      </div>
-
-                      {/* Content */}
-                      <div className="flex flex-1 flex-col justify-between gap-4 p-4 md:p-6 md:flex-row md:items-center overflow-hidden">
-                        <div className="space-y-3 flex-1 min-w-0">
-                          <div className="flex flex-wrap items-center gap-3">
-                            <span
-                              className={`rounded-full px-2.5 py-1 text-[10px] font-bold tracking-wider uppercase ${q.type.includes('multi') ? 'bg-purple-50 text-purple-600' : 'bg-blue-50 text-blue-600'}`}
-                            >
-                              {q.type.replace('-select', '').replace('-input', '')}
-                            </span>
-                            <span className="bg-gray-100 text-gray-600 rounded-full px-2.5 py-1 text-[10px] font-bold tracking-wider uppercase">
-                              For: {q.gender}
-                            </span>
-                            {q.isPopup && (
-                              <span className="bg-orange-50 text-orange-600 rounded-full px-2.5 py-1 text-[10px] font-bold tracking-wider uppercase">
-                                Popup
-                              </span>
-                            )}
-                            {!q.isActive && (
-                              <span className="bg-red-50 text-red-600 rounded-full px-2.5 py-1 text-[10px] font-bold tracking-wider uppercase">
-                                Inactive
-                              </span>
-                            )}
-                          </div>
-                          <h4 className="text-foreground text-lg font-bold truncate" title={q.questionText}>
-                            {q.questionText}
-                          </h4>
-                          <div className="flex flex-wrap gap-2">
-                            {q.options.length > 0 ? q.options.map((opt, i) => (
-                              <span
-                                key={i}
-                                className="bg-muted text-foreground/70 rounded-full px-3 py-1.5 text-xs font-medium flex items-center gap-1.5"
-                              >
-                                {opt.emoji && <span>{opt.emoji}</span>}
-                                {opt.text}
-                              </span>
-                            )) : (
-                              <span className="text-muted-foreground text-xs italic">No predefined options</span>
-                            )}
-                          </div>
+                      {dropTargetIndex === index && draggedIndex !== index && (
+                        <div className="h-1 rounded-full bg-primary mx-4 mb-3 animate-pulse shadow-[0_0_8px_rgba(217,6,85,0.5)]" />
+                      )}
+                      <div
+                        draggable
+                        onDragStart={(e) => handleDragStart(e, index)}
+                        onDragEnd={() => {
+                          setDraggedIndex(null);
+                          setDropTargetIndex(null);
+                        }}
+                        className={`hover:border-primary/20 group flex rounded-3xl border bg-white p-1 shadow-sm transition-all duration-300
+                          ${!q.isActive ? 'opacity-60' : ''}
+                          ${draggedIndex === index ? 'opacity-20 grayscale border-dashed border-muted-foreground/30' : 'border-transparent'}
+                          ${dropTargetIndex === index && draggedIndex !== index ? 'translate-y-1' : ''}
+                        `}
+                      >
+                        {/* Order Actions (Up/Down) */}
+                        <div className="hidden sm:flex flex-col items-center justify-center border-r px-2 gap-1">
+                          <button
+                            onClick={() => moveQuestion(index, 'up')}
+                            disabled={index === 0}
+                            className={`p-1 rounded hover:bg-muted transition-colors ${index === 0 ? 'text-muted-foreground/20 cursor-not-allowed' : 'text-muted-foreground hover:text-primary'}`}
+                            title="Move Up"
+                          >
+                            <ChevronUp size={20} />
+                          </button>
+                          <button
+                            onClick={() => moveQuestion(index, 'down')}
+                            disabled={index === questions.length - 1}
+                            className={`p-1 rounded hover:bg-muted transition-colors ${index === questions.length - 1 ? 'text-muted-foreground/20 cursor-not-allowed' : 'text-muted-foreground hover:text-primary'}`}
+                            title="Move Down"
+                          >
+                            <ChevronDown size={20} />
+                          </button>
                         </div>
 
-                        {/* Actions */}
-                        <div className="flex items-center gap-2 transition-opacity md:opacity-0 md:group-hover:opacity-100">
-                          <Button
-                            onClick={() => openEditModal(q)}
-                            variant="ghost"
-                            size="sm"
-                            className="h-9 w-9 rounded-full p-0 hover:bg-blue-50 hover:text-blue-600"
-                          >
-                            <Edit2 size={16} />
-                          </Button>
-                          <Button
-                            onClick={() => q._id && handleDeleteQuestion(q._id)}
-                            variant="ghost"
-                            size="sm"
-                            className="h-9 w-9 rounded-full p-0 hover:bg-red-50 hover:text-red-600"
-                          >
-                            <Trash2 size={16} />
-                          </Button>
+                        {/* Numbering Column */}
+                        <div className="bg-muted/50 hidden sm:flex w-12 flex-col items-center justify-center gap-2 rounded-lg">
+                          <span className="text-muted-foreground/40 text-xl font-black">
+                            {index + 1}
+                          </span>
+                        </div>
+
+                        {/* Content */}
+                        <div className="flex flex-1 flex-col justify-between gap-4 p-4 md:p-6 md:flex-row md:items-center overflow-hidden">
+                          <div className="space-y-3 flex-1 min-w-0">
+                            <div className="flex flex-wrap items-center gap-3">
+                              <span
+                                className={`rounded-full px-2.5 py-1 text-[10px] font-bold tracking-wider uppercase ${q.type.includes('multi') ? 'bg-purple-50 text-purple-600' : 'bg-blue-50 text-blue-600'}`}
+                              >
+                                {q.type.replace('-select', '').replace('-input', '')}
+                              </span>
+                              <span className="bg-gray-100 text-gray-600 rounded-full px-2.5 py-1 text-[10px] font-bold tracking-wider uppercase">
+                                For: {q.gender}
+                              </span>
+                              {q.isPopup && (
+                                <span className="bg-orange-50 text-orange-600 rounded-full px-2.5 py-1 text-[10px] font-bold tracking-wider uppercase">
+                                  Popup
+                                </span>
+                              )}
+                              {!q.isActive && (
+                                <span className="bg-red-50 text-red-600 rounded-full px-2.5 py-1 text-[10px] font-bold tracking-wider uppercase">
+                                  Inactive
+                                </span>
+                              )}
+                            </div>
+                            <h4 className="text-foreground text-lg font-bold truncate" title={q.questionText}>
+                              {q.questionText}
+                            </h4>
+                            <div className="flex flex-wrap gap-2">
+                              {q.options.length > 0 ? q.options.map((opt, i) => (
+                                <span
+                                  key={i}
+                                  className="bg-muted text-foreground/70 rounded-full px-3 py-1.5 text-xs font-medium flex items-center gap-1.5"
+                                >
+                                  {opt.emoji && <span>{opt.emoji}</span>}
+                                  {opt.text}
+                                </span>
+                              )) : (
+                                <span className="text-muted-foreground text-xs italic">No predefined options</span>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Actions */}
+                          <div className="flex items-center gap-2 transition-opacity md:opacity-0 md:group-hover:opacity-100">
+                            <Button
+                              onClick={() => openEditModal(q)}
+                              variant="ghost"
+                              size="sm"
+                              className="h-9 w-9 rounded-full p-0 hover:bg-blue-50 hover:text-blue-600"
+                            >
+                              <Edit2 size={16} />
+                            </Button>
+                            <Button
+                              onClick={() => q._id && handleDeleteQuestion(q._id)}
+                              variant="ghost"
+                              size="sm"
+                              className="h-9 w-9 rounded-full p-0 hover:bg-red-50 hover:text-red-600"
+                            >
+                              <Trash2 size={16} />
+                            </Button>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -1123,6 +1261,33 @@ export const Dashboard = () => {
                         </select>
                         <ChevronRight className="absolute right-4 top-1/2 -translate-y-1/2 rotate-90 text-muted-foreground pointer-events-none" size={16} />
                       </div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-6">
+                    <div className="space-y-3">
+                      <label className="text-muted-foreground pl-1 text-[10px] font-black tracking-widest uppercase">
+                        Class ID
+                      </label>
+                      <input
+                        type="text"
+                        value={newQuestionClassId}
+                        onChange={(e) => setNewQuestionClassId(e.target.value)}
+                        className="bg-muted/50 focus:bg-background focus:ring-primary/20 w-full rounded-2xl border-none px-6 py-4 text-sm font-black transition-all outline-none"
+                        placeholder="Class ID"
+                      />
+                    </div>
+                    <div className="space-y-3">
+                      <label className="text-muted-foreground pl-1 text-[10px] font-black tracking-widest uppercase">
+                        Attribute ID
+                      </label>
+                      <input
+                        type="text"
+                        value={newQuestionAttributeId}
+                        onChange={(e) => setNewQuestionAttributeId(e.target.value)}
+                        className="bg-muted/50 focus:bg-background focus:ring-primary/20 w-full rounded-2xl border-none px-6 py-4 text-sm font-black transition-all outline-none"
+                        placeholder="Attribute ID"
+                      />
                     </div>
                   </div>
 
@@ -1281,29 +1446,49 @@ export const Dashboard = () => {
 
                             <div className="grid grid-cols-1 gap-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar p-1">
                               {newQuestionOptions.map((opt, idx) => (
-                                <div key={idx} className="flex gap-4 group items-center bg-muted/10 p-2 rounded-2xl hover:bg-muted/20 transition-all">
-                                  <input
-                                    type="text"
-                                    value={opt.emoji}
-                                    onChange={(e) => handleUpdateOption(idx, 'emoji', e.target.value)}
-                                    placeholder="Icon"
-                                    className="bg-white shadow-sm w-16 h-14 rounded-xl border-none text-center text-xl outline-none focus:ring-2 focus:ring-primary/20 transition-all font-black"
-                                  />
-                                  <input
-                                    type="text"
-                                    value={opt.text}
-                                    onChange={(e) => handleUpdateOption(idx, 'text', e.target.value)}
-                                    placeholder={`Option ${idx + 1} Label`}
-                                    className="bg-white shadow-sm flex-1 h-14 rounded-xl border-none px-6 text-base font-bold outline-none focus:ring-2 focus:ring-primary/20 transition-all"
-                                  />
-                                  <Button
-                                    onClick={() => handleRemoveOption(idx)}
-                                    variant="ghost"
-                                    size="sm"
-                                    className="h-14 w-14 rounded-xl p-0 text-red-400 hover:bg-red-50 hover:text-red-500 transition-all"
-                                  >
-                                    <Trash2 size={18} />
-                                  </Button>
+                                <div key={idx} className="flex flex-col gap-3 bg-muted/20 p-4 rounded-[32px] border border-[#1a1a1b]/5 hover:border-primary/20 transition-all group shadow-sm hover:shadow-md">
+                                  <div className="flex gap-4 items-center">
+                                    <div className="flex flex-col gap-1.5 items-center">
+                                      <label className="text-[8px] font-black text-primary uppercase tracking-[0.2em] opacity-60">Score</label>
+                                      <input
+                                        type="number"
+                                        value={opt.score}
+                                        onChange={(e) => handleUpdateOption(idx, 'score', parseInt(e.target.value) || 0)}
+                                        placeholder="0"
+                                        className="bg-white shadow-sm w-16 h-14 rounded-2xl border-none text-center text-sm font-black outline-none focus:ring-4 focus:ring-primary/10 transition-all border-2 border-transparent focus:border-primary/20"
+                                      />
+                                    </div>
+                                    <div className="flex flex-col gap-1.5 items-center">
+                                      <label className="text-[8px] font-black text-muted-foreground uppercase tracking-[0.2em] opacity-60">Icon</label>
+                                      <input
+                                        type="text"
+                                        value={opt.emoji}
+                                        onChange={(e) => handleUpdateOption(idx, 'emoji', e.target.value)}
+                                        placeholder="Icon"
+                                        className="bg-white shadow-sm w-16 h-14 rounded-2xl border-none text-center text-xl outline-none focus:ring-4 focus:ring-primary/10 transition-all font-black border-2 border-transparent focus:border-primary/20"
+                                      />
+                                    </div>
+                                    <div className="flex-1 flex flex-col gap-1.5">
+                                      <label className="text-[8px] font-black text-muted-foreground uppercase tracking-[0.2em] opacity-60 pl-1">Option Label</label>
+                                      <input
+                                        type="text"
+                                        value={opt.text}
+                                        onChange={(e) => handleUpdateOption(idx, 'text', e.target.value)}
+                                        placeholder={`Option ${idx + 1} Label`}
+                                        className="bg-white shadow-sm w-full h-14 rounded-2xl border-none px-6 text-base font-bold outline-none focus:ring-4 focus:ring-primary/10 transition-all border-2 border-transparent focus:border-primary/20"
+                                      />
+                                    </div>
+                                    <div className="pt-5">
+                                      <Button
+                                        onClick={() => handleRemoveOption(idx)}
+                                        variant="ghost"
+                                        size="sm"
+                                        className="h-14 w-14 rounded-[20px] p-0 text-red-400 hover:bg-red-50 hover:text-red-500 transition-all"
+                                      >
+                                        <Trash2 size={18} />
+                                      </Button>
+                                    </div>
+                                  </div>
                                 </div>
                               ))}
                             </div>

@@ -39,12 +39,19 @@ export default function EmailFormPage() {
                 throw new Error(data.message || 'Submission failed');
             }
 
-            // Note: We don't necessarily need to store a token here 
-            // since the results page is accessible via the flow.
-            // But we can store the user info if needed for the results page.
-            if (data.userResponse && data.userResponse.userId) {
+            // Store the JWT token and user info so results pages can authenticate
+            if (data.token) {
+                localStorage.setItem('token', data.token);
+            }
+            if (data.user) {
+                localStorage.setItem('user', JSON.stringify(data.user));
+            } else {
                 localStorage.setItem('user', JSON.stringify({ email, firstName: name }));
             }
+
+            // Clear quiz session data
+            sessionStorage.removeItem('quizResponses');
+            sessionStorage.removeItem('quizGender');
 
             navigate('/calculating');
         } catch (err: any) {
