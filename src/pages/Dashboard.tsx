@@ -60,11 +60,26 @@ interface Submission {
   id: string;
   name: string;
   email: string;
-  phone: string;
+  phone?: string;
   gender: string;
   questions: string;
   selectedOptions: string;
   date: string;
+  fullResponses?: { question: string; answer: string }[];
+}
+
+interface Stats {
+  totalSubmissions: number;
+  completedSubmissions: number;
+  totalUsers: number;
+  completionRate: string;
+  recentSubmissionsCount: number;
+  genderStats: {
+    female: number;
+    male: number;
+    other: number;
+  };
+  last7Days: { day: string; count: number }[];
 }
 
 export const Dashboard = () => {
@@ -72,8 +87,10 @@ export const Dashboard = () => {
   // --- Data State ---
   const [questions, setQuestions] = useState<Question[]>([]);
   const [submissions, setSubmissions] = useState<Submission[]>([]);
+  const [stats, setStats] = useState<Stats | null>(null);
   const [loadingQuestions, setLoadingQuestions] = useState(false);
   const [loadingSubmissions, setLoadingSubmissions] = useState(false);
+  const [loadingStats, setLoadingStats] = useState(false);
   const [isAddingQuestion, setIsAddingQuestion] = useState(false);
   const [editingQuestion, setEditingQuestion] = useState<Question | null>(null);
   const [activeTab, setActiveTab] = useState<'analytics' | 'submissions' | 'questions'>('analytics');
@@ -153,12 +170,33 @@ export const Dashboard = () => {
       return;
     }
 
-    if (activeTab === 'questions') {
+    if (activeTab === 'analytics') {
+      fetchStats();
+    } else if (activeTab === 'questions') {
       fetchQuestions();
     } else if (activeTab === 'submissions') {
       fetchSubmissions();
     }
   }, [activeTab]);
+
+  const fetchStats = async () => {
+    setLoadingStats(true);
+    try {
+      const resp = await fetch(`${API_URL}/questions/stats`, {
+        headers: getHeaders(),
+      });
+      if (resp.ok) {
+        const data = await resp.json();
+        setStats(data.stats);
+      } else if (resp.status === 401) {
+        handleLogout();
+      }
+    } catch (err) {
+      console.error('Failed to fetch stats:', err);
+    } finally {
+      setLoadingStats(false);
+    }
+  };
 
   const fetchSubmissions = async () => {
     setLoadingSubmissions(true);
@@ -587,119 +625,130 @@ export const Dashboard = () => {
           {/* --- Analytics Tab --- */}
           {activeTab === 'analytics' && (
             <div className="animate-in fade-in space-y-8 duration-500">
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4 md:gap-6">
-                <StatCard
-                  icon={<Users className="text-blue-500" />}
-                  label="Total Users"
-                  value="127,458"
-                  trend="+12.5%"
-                  color="bg-blue-500/10"
-                />
-                <StatCard
-                  icon={<CheckCircle className="text-green-500" />}
-                  label="Completion Rate"
-                  value="94.2%"
-                  trend="+0.8%"
-                  color="bg-green-500/10"
-                />
-                <StatCard
-                  icon={<ClipboardList className="text-orange-500" />}
-                  label="Total Submissions"
-                  value="2,475"
-                  trend="+5.4%"
-                  color="bg-orange-500/10"
-                />
-                <StatCard
-                  icon={<CreditCard className="text-purple-500" />}
-                  label="Avg. Time"
-                  value="2m 14s"
-                  trend="-12s"
-                  color="bg-purple-500/10"
-                />
-              </div>
+              {loadingStats && !stats ? (
+                <div className="flex h-64 items-center justify-center">
+                  <div className="border-primary h-8 w-8 animate-spin rounded-full border-4 border-t-transparent" />
+                </div>
+              ) : (
+                <>
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4 md:gap-6">
+                    <StatCard
+                      icon={<Users className="text-blue-500" />}
+                      label="Total Users"
+                      value={stats?.totalUsers?.toLocaleString() || '0'}
+                      trend="+12.5%"
+                      color="bg-blue-500/10"
+                    />
+                    <StatCard
+                      icon={<CheckCircle className="text-green-500" />}
+                      label="Completion Rate"
+                      value={stats?.completionRate || '0%'}
+                      trend="+0.8%"
+                      color="bg-green-500/10"
+                    />
+                    <StatCard
+                      icon={<ClipboardList className="text-orange-500" />}
+                      label="Total Submissions"
+                      value={stats?.totalSubmissions?.toLocaleString() || '0'}
+                      trend={`+${stats?.recentSubmissionsCount || 0} this week`}
+                      color="bg-orange-500/10"
+                    />
+                    <StatCard
+                      icon={<CreditCard className="text-purple-500" />}
+                      label="Completed"
+                      value={stats?.completedSubmissions?.toLocaleString() || '0'}
+                      trend="Real-time"
+                      color="bg-purple-500/10"
+                    />
+                  </div>
 
-              <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
-                <Card className="overflow-hidden rounded-3xl border-none shadow-sm lg:col-span-2">
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <CardTitle>Submission Volume</CardTitle>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="h-8 rounded-full text-xs"
-                      >
-                        This Week
-                      </Button>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="pt-4 p-3 sm:p-6">
-                    <div className="overflow-x-auto pb-4 custom-scrollbar">
-                      <div className="flex h-[250px] md:h-[300px] min-w-[500px] md:min-w-0 items-end justify-between gap-1.5 md:gap-4 px-2">
-                        {[45, 78, 55, 92, 68, 85, 50, 88, 98, 65, 76, 82].map(
-                          (h, i) => (
-                            <div
-                              key={i}
-                              className="bg-[#D90655]/10 group hover:bg-gradient-to-t hover:from-[#D90655] hover:to-[#FC3F39] relative w-full rounded-t-xl transition-all"
-                              style={{ height: `${h}%` }}
-                            >
-                              <div className="bg-secondary text-secondary-foreground absolute -top-10 left-1/2 z-10 -translate-x-1/2 rounded px-2 py-1 text-xs font-bold whitespace-nowrap opacity-0 shadow-lg transition-opacity group-hover:opacity-100">
-                                {h * 12} leads
-                              </div>
+                  <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
+                    <Card className="overflow-hidden rounded-3xl border-none shadow-sm lg:col-span-2">
+                      <CardHeader>
+                        <div className="flex items-center justify-between">
+                          <CardTitle>Submission Volume</CardTitle>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-8 rounded-full text-xs"
+                          >
+                            This Week
+                          </Button>
+                        </div>
+                      </CardHeader>
+                      <CardContent className="pt-4 p-3 sm:p-6">
+                        <div className="overflow-x-auto pb-6 custom-scrollbar">
+                          <div className="flex h-[250px] md:h-[300px] min-w-[500px] md:min-w-0 items-end justify-between gap-2 md:gap-4 px-2 pt-10">
+                            {(() => {
+                              const maxCount = Math.max(...(stats?.last7Days || []).map(d => d.count), 1);
+                              return (stats?.last7Days || []).map((data, i) => {
+                                const isToday = i === (stats?.last7Days?.length || 0) - 1;
+                                const h = data.count > 0 ? (data.count / maxCount) * 100 : 5;
+                                return (
+                                  <div
+                                    key={i}
+                                    className={`relative w-full rounded-t-xl transition-all group ${isToday ? 'bg-primary/20' : 'bg-[#D90655]/10'} hover:bg-gradient-to-t hover:from-[#D90655] hover:to-[#FC3F39]`}
+                                    style={{ height: `${h}%` }}
+                                  >
+                                    <span className="absolute -top-6 left-1/2 -translate-x-1/2 text-[10px] font-bold text-muted-foreground group-hover:text-primary transition-colors">
+                                      {data.count}
+                                    </span>
+                                    <div className="bg-secondary text-secondary-foreground absolute -top-12 left-1/2 z-10 -translate-x-1/2 rounded px-2 py-1 text-[10px] font-bold whitespace-nowrap opacity-0 shadow-lg transition-opacity group-hover:opacity-100">
+                                      {data.count} submissions
+                                    </div>
+                                  </div>
+                                );
+                              });
+                            })()}
+                          </div>
+                        </div>
+                        <div className="text-muted-foreground mt-4 flex justify-between px-2 text-[9px] md:text-xs font-bold tracking-wider uppercase">
+                          {(stats?.last7Days || []).map((data, i) => (
+                            <div key={i} className="flex flex-col items-center gap-1">
+                              <span className={i === (stats?.last7Days?.length || 0) - 1 ? 'text-primary font-black' : ''}>
+                                {data.day}
+                              </span>
                             </div>
-                          )
-                        )}
-                      </div>
-                    </div>
-                    <div className="text-muted-foreground mt-4 flex justify-between px-2 text-[10px] md:text-xs font-medium tracking-wider uppercase">
-                      <span>Mon</span>
-                      <span>Tue</span>
-                      <span>Wed</span>
-                      <span>Thu</span>
-                      <span>Fri</span>
-                      <span>Sat</span>
-                      <span>Sun</span>
-                    </div>
-                  </CardContent>
-                </Card>
+                          ))}
+                        </div>
+                      </CardContent>
+                    </Card>
 
-                <Card className="rounded-3xl border-none shadow-sm">
-                  <CardHeader>
-                    <CardTitle>Demographics</CardTitle>
-                    <CardDescription>
-                      Gender distribution of respondents
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-8 pt-6">
-                    <GenderProgress
-                      label="Female"
-                      percentage={68}
-                      color="bg-gradient-to-r from-[#D90655] to-[#FC3F39]"
-                    />
-                    <GenderProgress
-                      label="Male"
-                      percentage={28}
-                      color="bg-secondary"
-                    />
-                    <GenderProgress
-                      label="Non-Binary"
-                      percentage={4}
-                      color="bg-gray-300"
-                    />
+                    <Card className="rounded-3xl border-none shadow-sm">
+                      <CardHeader>
+                        <CardTitle>Demographics</CardTitle>
+                        <CardDescription>
+                          Gender distribution of respondents
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent className="space-y-8 pt-6">
+                        <GenderProgress
+                          label="Female"
+                          percentage={stats?.genderStats?.female || 0}
+                          color="bg-gradient-to-r from-[#D90655] to-[#FC3F39]"
+                        />
+                        <GenderProgress
+                          label="Male"
+                          percentage={stats?.genderStats?.male || 0}
+                          color="bg-secondary"
+                        />
 
-                    <div className="bg-muted/50 mt-8 rounded-2xl p-4">
-                      <p className="text-muted-foreground text-center text-xs">
-                        Most users are{' '}
-                        <span className="text-foreground font-bold">
-                          Female
-                        </span>{' '}
-                        aged{' '}
-                        <span className="text-foreground font-bold">25-34</span>
-                        .
-                      </p>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
+                        <div className="bg-muted/50 mt-8 rounded-2xl p-4">
+                          <p className="text-muted-foreground text-center text-xs">
+                            Most users are{' '}
+                            <span className="text-foreground font-bold">
+                              Female
+                            </span>{' '}
+                            aged{' '}
+                            <span className="text-foreground font-bold">25-34</span>
+                            .
+                          </p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                </>
+              )}
             </div>
           )}
 
@@ -1458,20 +1507,38 @@ export const Dashboard = () => {
                   <p className="text-muted-foreground text-[10px] font-bold tracking-widest uppercase">Email</p>
                   <p className="font-bold">{selectedSubmission.email}</p>
                 </div>
-                <div className="space-y-1">
+                {/* <div className="space-y-1">
                   <p className="text-muted-foreground text-[10px] font-bold tracking-widest uppercase">Phone</p>
                   <p className="font-bold">{selectedSubmission.phone}</p>
-                </div>
+                </div> */}
               </div>
 
-              <div className="bg-muted/30 rounded-2xl p-6 space-y-4">
-                <div className="space-y-1">
-                  <p className="text-muted-foreground text-[10px] font-bold tracking-widest uppercase">Question</p>
-                  <p className="font-medium text-sm leading-relaxed">{selectedSubmission.questions}</p>
-                </div>
-                <div className="space-y-1 border-t border-[#1a1a1b]/5 pt-4">
-                  <p className="text-muted-foreground text-[10px] font-bold tracking-widest uppercase">User Response</p>
-                  <p className="text-primary font-bold text-lg">{selectedSubmission.selectedOptions}</p>
+              <div className="space-y-4">
+                <p className="text-muted-foreground text-[10px] font-bold tracking-widest uppercase">
+                  Answers ({selectedSubmission.fullResponses?.length || 0})
+                </p>
+                <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+                  {selectedSubmission.fullResponses && selectedSubmission.fullResponses.length > 0 ? (
+                    selectedSubmission.fullResponses.map((resp, idx) => (
+                      <div key={idx} className="bg-muted/30 rounded-2xl p-4 space-y-1 border border-transparent hover:border-primary/10 transition-colors">
+                        <p className="text-muted-foreground text-[10px] font-bold tracking-widest uppercase line-clamp-1" title={resp.question}>
+                          Question {idx + 1}: {resp.question}
+                        </p>
+                        <p className="font-bold text-sm text-foreground">{resp.answer || 'No answer'}</p>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="bg-muted/30 rounded-2xl p-6 space-y-4">
+                      <div className="space-y-1">
+                        <p className="text-muted-foreground text-[10px] font-bold tracking-widest uppercase">Questions Summary</p>
+                        <p className="font-medium text-sm leading-relaxed">{selectedSubmission.questions}</p>
+                      </div>
+                      <div className="space-y-1 border-t border-[#1a1a1b]/5 pt-4">
+                        <p className="text-muted-foreground text-[10px] font-bold tracking-widest uppercase">Responses Summary</p>
+                        <p className="text-primary font-bold text-lg">{selectedSubmission.selectedOptions}</p>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 
