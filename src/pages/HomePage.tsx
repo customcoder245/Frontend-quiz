@@ -127,7 +127,7 @@ export default function HomePage() {
                             <div className="flex flex-col sm:flex-row gap-5">
                                 <button
                                     className="h-[56px] sm:w-[196px] rounded-[50px] bg-gradient-to-r from-[#D90655] to-[#FC3F39] text-[24px] font-bold text-white transition-all active:scale-[0.98] shadow-xl shadow-pink-100"
-                                onClick={() => navigate('/quiz?gender=female')}
+                                // onClick={() => navigate('/quiz?gender=female')}
                                 >
                                     Female
                                 </button>

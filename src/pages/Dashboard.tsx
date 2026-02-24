@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { useTable, usePagination, useGlobalFilter } from 'react-table';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import ReactQuill from 'react-quill-new';
 import 'react-quill-new/dist/quill.snow.css';
 import {
@@ -98,7 +98,15 @@ export const Dashboard = () => {
   const [loadingStats, setLoadingStats] = useState(false);
   const [isAddingQuestion, setIsAddingQuestion] = useState(false);
   const [editingQuestion, setEditingQuestion] = useState<Question | null>(null);
-  const [activeTab, setActiveTab] = useState<'analytics' | 'submissions' | 'questions'>('analytics');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const VALID_TABS = ['analytics', 'submissions', 'questions'] as const;
+  type TabType = typeof VALID_TABS[number];
+  const rawTab = searchParams.get('tab');
+  const activeTab: TabType = VALID_TABS.includes(rawTab as TabType) ? (rawTab as TabType) : 'analytics';
+
+  const setActiveTab = (tab: TabType) => {
+    setSearchParams({ tab });
+  };
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [selectedSubmission, setSelectedSubmission] = useState<Submission | null>(null);
   const [isSubmissionModalOpen, setIsSubmissionModalOpen] = useState(false);
