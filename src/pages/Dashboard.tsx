@@ -43,6 +43,7 @@ interface Option {
   text: string;
   emoji: string;
   score: number;
+  jumpTo?: string; // ID of the question to jump to
 }
 
 interface Question {
@@ -539,7 +540,7 @@ export const Dashboard = () => {
   const handleAddOption = () => {
     setNewQuestionOptions([
       ...newQuestionOptions,
-      { text: '', emoji: '', score: 0 },
+      { text: '', emoji: '', score: 0, jumpTo: '' },
     ]);
   };
 
@@ -1454,8 +1455,8 @@ export const Dashboard = () => {
 
                             <div className="grid grid-cols-1 gap-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar p-1">
                               {newQuestionOptions.map((opt, idx) => (
-                                <div key={idx} className="flex flex-col gap-3 bg-muted/20 p-4 rounded-[32px] border border-[#1a1a1b]/5 hover:border-primary/20 transition-all group shadow-sm hover:shadow-md">
-                                  <div className="flex gap-4 items-center">
+                                <div key={idx} className="flex flex-col gap-4 bg-muted/20 p-6 rounded-[32px] border border-[#1a1a1b]/5 hover:border-primary/20 transition-all group shadow-sm hover:shadow-md">
+                                  <div className="flex flex-wrap md:flex-nowrap gap-4 items-end">
                                     <div className="flex flex-col gap-1.5 items-center">
                                       <label className="text-[8px] font-black text-primary uppercase tracking-[0.2em] opacity-60">Score</label>
                                       <input
@@ -1476,7 +1477,7 @@ export const Dashboard = () => {
                                         className="bg-white shadow-sm w-16 h-14 rounded-2xl border-none text-center text-xl outline-none focus:ring-4 focus:ring-primary/10 transition-all font-black border-2 border-transparent focus:border-primary/20"
                                       />
                                     </div>
-                                    <div className="flex-1 flex flex-col gap-1.5">
+                                    <div className="flex-1 min-w-[200px] flex flex-col gap-1.5">
                                       <label className="text-[8px] font-black text-muted-foreground uppercase tracking-[0.2em] opacity-60 pl-1">Option Label</label>
                                       <input
                                         type="text"
@@ -1486,7 +1487,28 @@ export const Dashboard = () => {
                                         className="bg-white shadow-sm w-full h-14 rounded-2xl border-none px-6 text-base font-bold outline-none focus:ring-4 focus:ring-primary/10 transition-all border-2 border-transparent focus:border-primary/20"
                                       />
                                     </div>
-                                    <div className="pt-5">
+                                    <div className="flex-1 min-w-[200px] flex flex-col gap-1.5">
+                                      <label className="text-[8px] font-black text-blue-500 uppercase tracking-[0.2em] opacity-60 pl-1">Jump To (Optional)</label>
+                                      <div className="relative">
+                                        <select
+                                          value={opt.jumpTo || ''}
+                                          onChange={(e) => handleUpdateOption(idx, 'jumpTo', e.target.value)}
+                                          className="bg-white shadow-sm w-full h-14 rounded-2xl border-none px-6 pr-10 text-sm font-black outline-none focus:ring-4 focus:ring-primary/10 transition-all border-2 border-transparent focus:border-primary/20 appearance-none"
+                                        >
+                                          <option value="">Next Question (Default)</option>
+                                          <option value="end">End of Quiz</option>
+                                          {questions.filter(q => q._id !== (editingQuestion?._id)).map((q, qIdx) => (
+                                            <option key={q._id} value={q._id}>
+                                              Q{qIdx + 1}: {q.questionText.substring(0, 30)}...
+                                            </option>
+                                          ))}
+                                        </select>
+                                        <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground">
+                                          <ChevronDown size={14} />
+                                        </div>
+                                      </div>
+                                    </div>
+                                    <div className="">
                                       <Button
                                         onClick={() => handleRemoveOption(idx)}
                                         variant="ghost"
