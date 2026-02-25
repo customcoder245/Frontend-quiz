@@ -23,7 +23,7 @@ export default function HomePage() {
 
   return (
     /* Entire page locked to viewport height with no scroll */
-    <div className="selection:bg-primary/20 selection:text-primary-foreground flex xl:h-screen flex-col overflow-hidden bg-white md:py-8 py-6 font-sans">
+    <div className="selection:bg-primary/20 selection:text-primary-foreground flex xl:h-screen flex-col overflow-hidden bg-white md:py-8 py-6 ">
       {/* Header / Nav - UI preserved exactly as original */}
 <div className='md:mx-6'>
       <header className="bg-opacity-30 mx-auto flex w-full max-w-[1360px] items-center justify-between rounded-full bg-white md:px-8 px-6 py-3.5 md:shadow-[4px_4px_10px_0px_rgba(0,0,0,0.05)] backdrop-blur-[40px] backdrop-blur-lg">

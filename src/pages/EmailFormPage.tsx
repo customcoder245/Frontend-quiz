@@ -64,20 +64,21 @@ export default function EmailFormPage() {
     };
 
     return (
-        <div className="min-h-screen bg-white font-sans flex flex-col">
-            <header className="px-6 py-6 flex items-center justify-between border-b border-[#1a1a1b]/5">
+        <div className="xl:h-screen bg-white font-sans flex flex-col pt-5">
+           
+            <header className="bg-opacity-30 mx-auto flex w-full max-w-[1360px] items-center justify-between  bg-white md:px-8 px-6 py-3.5 backdrop-blur-[40px] backdrop-blur-lg">
                 <div className="flex items-center cursor-pointer" onClick={() => navigate('/')}>
                     <img src="/logo.png" alt="The Mediterranean Diet" className="h-8 md:h-10 w-auto object-contain" />
                 </div>
 
                 <div className="hidden sm:flex items-center space-x-6">
-                    <div className="flex items-center space-x-2 text-[12px] font-black text-[#1a1a1b]/60">
-                        <CheckCircle2 className="w-5 h-5 text-[#34a853]" />
-                        <span>95% Success rate</span>
+                    <div className="flex items-center gap-2 ">
+                        <img src="/check.svg" className='m-0' alt="" />
+                        <span className='text-[#10181F] text-sm font-normal leading-[1.8em]'>95% Success rate</span>
                     </div>
-                    <div className="flex items-center space-x-2 text-[12px] font-black text-[#1a1a1b]/60">
-                        <ShieldCheck className="w-5 h-5 text-primary" />
-                        <span>Trusted by 127K+</span>
+                    <div className="flex items-center gap-2">
+                        <img src="/Shield.svg" className='m-0' alt="" />
+                        <span className="text-[#10181F] text-sm font-normal leading-[1.8em]">Trusted by 127K+</span>
                     </div>
                 </div>
 
@@ -89,7 +90,6 @@ export default function EmailFormPage() {
                     <Menu size={24} />
                 </button>
             </header>
-
             {/* Mobile Sidebar */}
             <div
                 className={`fixed inset-0 z-50 flex justify-end transition-all duration-300 md:hidden ${isMobileMenuOpen ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0'}`}
@@ -138,20 +138,11 @@ export default function EmailFormPage() {
                             </li>
                         </ul>
                     </nav>
-
-                    <div className="mt-auto border-t border-black/5">
-                        <button
-                            className="shadow-primary/20 w-full py-2 rounded-full bg-gradient-to-r from-[#D90655] to-[#FC3F39] text-[16px] font-bold text-white shadow-xl transition-all hover:opacity-90 active:scale-[0.98]"
-                            onClick={() => navigate('/login')}
-                        >
-                            Login
-                        </button>
-                    </div>
                 </div>
             </div>
 
-            <main className="flex-1 max-w-xl mx-auto w-full px-6 py-20 flex flex-col items-center justify-center text-center">
-                <h2 className="text-4xl md:text-5xl font-black text-[#1a1a1b] tracking-tight mb-12">
+            <main className="max-w-xl mx-auto w-full px-6 pt-8">
+                <h2 className="md:text-[32px] text-[28px] font-semibold leading-[1.2em] baikal-trial text-[#10181F] text-center">
                     Enter your name and email to <br /> view the results
                 </h2>
 
@@ -161,10 +152,10 @@ export default function EmailFormPage() {
                     </div>
                 )}
 
-                <form className="w-full space-y-4 mb-8" onSubmit={handleSubmit}>
+                <form className="w-full mt-8 space-y-4 mb-8" onSubmit={handleSubmit}>
                     <Input
                         placeholder="Name"
-                        className="h-16 rounded-2xl border-2 border-[#1a1a1b]/5 bg-white px-6 text-lg font-bold placeholder:text-[#1a1a1b]/20"
+                        className="rounded-lg font-normal border-[1px] border-[#10181F1A] h-[60px] text-xl bg-white placeholder:text-[#10181F80]"
                         required
                         value={name}
                         onChange={(e) => setName(e.target.value)}
@@ -172,33 +163,34 @@ export default function EmailFormPage() {
                     <Input
                         placeholder="email@email.com"
                         type="email"
-                        className="h-16 rounded-2xl border-2 border-[#1a1a1b]/5 bg-white px-6 text-lg font-bold placeholder:text-[#1a1a1b]/20"
+                        className="focus-visible:shadow-none rounded-lg font-normal border-[1px] border-[#10181F1A] h-[60px] text-xl bg-white placeholder:text-[#10181F80]"
                         required
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                     />
 
-                    <div className="bg-[#34a853]/5 border-2 border-[#34a853]/10 rounded-[24px] p-6 flex items-start space-x-4 mt-8">
-                        <div className="w-8 h-8 bg-[#34a853]/10 rounded-full flex items-center justify-center text-[#34a853] flex-shrink-0">
-                            <Lock className="w-4 h-4" />
+                    <div className="bg-[#088E441A] border border-[#088E441A] md:p-8  flex rounded-[14px] text-base font-normal gap-4 ">
+                        <div className="w-[10%]">
+                            <img src="/lock.svg" className='w-[24px] h[24px]' alt="" />
                         </div>
-                        <p className="text-sm font-bold text-[#1a1a1b]/60 text-left leading-relaxed">
+                        <p className="text-[#10181FB2]">
                             We respect your privacy. Your email is safe with us. We&apos;ll send you a copy of your results for easy access — no spam, ever.
                         </p>
                     </div>
-
+                    <div className='text-center mt-6'>
                     <Button
-                        className="w-full h-16 text-xl font-black rounded-full shadow-lg shadow-[#D90655]/20 mt-8"
+                        className="text-xl font-black rounded-full h-[56px] px-[56px]"
                         type="submit"
                         disabled={isLoading}
                     >
                         {isLoading ? <Loader2 className="animate-spin" /> : 'Continue'}
                     </Button>
+                    </div>
                 </form>
 
-                <div className="mt-12 flex items-center space-x-2 text-xs font-bold text-[#1a1a1b]/60">
-                    <div className="w-2 h-2 bg-[#34a853] rounded-full animate-pulse" />
-                    <span>856 people are taking this quiz right now</span>
+                <div className="mt-auto md:pt-20 pt-8 md:pb-10 pb-6 flex items-center justify-center space-x-2 text-xs font-bold text-[#1a1a1b]/60">
+                    <div className="w-2 h-2 bg-[#088E44] rounded-full  center" />
+                    <span className='text-[#10181FCC] text-xs font-normal'>856 people are taking this quiz right now</span>
                 </div>
             </main>
         </div>
