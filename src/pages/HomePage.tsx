@@ -148,67 +148,73 @@ export default function HomePage() {
 
       {/* Main Hero Section */}
       <main className="md:bg-[url('/public/banner.png')] bg-no-repeat bg-right bg-cover h-full mt-4">
-          <div className='max-w-[1360px] mx-auto md:px-8'>
+        <div className='max-w-[1360px] mx-auto md:px-8'>
 
-          
-        <div className='md:flex '>
+
+          <div className='md:flex '>
             <div className="md:pt-32 pt-8 px-6 md:px-0">
-                <div className="space-y-6">
+              <div className="space-y-6">
                 <h1 className="font-extrabold text-[56px]  leading-tight">
-                    Create your ideal 30-day <br className="hidden xl:block" />
-                    Mediterranean meal plan
+                  Create your ideal 30-day <br className="hidden xl:block" />
+                  Mediterranean meal plan
                 </h1>
                 <p className="font-AmsiPro-Regular text-20px font-bold text-[#1a1a1b]/30 md:text-2xl">
-                    Take 1-minute FREE test
+                  Take 1-minute FREE test
                 </p>
-                </div>
-                <div className="space-y-6">
+              </div>
+              <div className="space-y-6">
                 <p className="font-AmsiPro-Regular text-[13px] font-bold text-[#1a1a1b]/40">
-                    Start by selecting your gender:
+                  Start by selecting your gender:
                 </p>
 
                 <div className="flex flex-col gap-5 sm:flex-row">
-                    <button
+                  <button
                     className="h-[56px] rounded-[50px] bg-gradient-to-r from-[#D90655] to-[#FC3F39] text-[24px] font-bold text-white shadow-xl shadow-pink-100 transition-all active:scale-[0.98] sm:w-[196px]"
-                    onClick={() => navigate('/quiz?gender=female')}
-                    >
+                    onClick={() => {
+                      sessionStorage.removeItem('quizResponses');
+                      navigate('/quiz?gender=female');
+                    }}
+                  >
                     Female
-                    </button>
-                    <button
+                  </button>
+                  <button
                     className="h-[56px] rounded-[50px] bg-[#1a1a1b] text-[24px] font-bold text-white shadow-xl shadow-black/5 transition-all hover:bg-[#2a2a2b] active:scale-[0.98] sm:w-[195px]"
-                    onClick={() => navigate('/quiz?gender=male')}
-                    >
+                    onClick={() => {
+                      sessionStorage.removeItem('quizResponses');
+                      navigate('/quiz?gender=male');
+                    }}
+                  >
                     Male
-                    </button>
+                  </button>
                 </div>
-                </div>
-                {/* Social Proof */}
-                <div className="flex flex-wrap items-center gap-x-10 gap-y-4 pt-4">
+              </div>
+              {/* Social Proof */}
+              <div className="flex flex-wrap items-center gap-x-10 gap-y-4 pt-4">
                 <div className="flex items-center gap-2">
-                    <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-1">
                     {[1, 2, 3, 4, 5].map((i) => (
-                        <Star
+                      <Star
                         key={i}
                         className="h-4 w-4 fill-[#ff9500] text-[#ff9500]"
-                        />
+                      />
                     ))}
-                    </div>
-                    <p className="text-[13px] font-bold text-[#1a1a1b]">
+                  </div>
+                  <p className="text-[13px] font-bold text-[#1a1a1b]">
                     2475 customer reviews
-                    </p>
+                  </p>
                 </div>
                 <div className="flex items-center gap-2">
-                    <span className="text-lg">🛡️</span>
-                    <span className="text-[13px] font-bold text-[#1a1a1b]">
+                  <span className="text-lg">🛡️</span>
+                  <span className="text-[13px] font-bold text-[#1a1a1b]">
                     Trusted by 127K+
-                    </span>
+                  </span>
                 </div>
-                </div>
+              </div>
             </div>
             <div className='md:hidden block w-full'>
-                <img src="/public/mobile-banner.png" className='w-full h-full' alt="" />
+              <img src="/public/mobile-banner.png" className='w-full h-full' alt="" />
             </div>
-        </div>
+          </div>
         </div>
       </main>
 

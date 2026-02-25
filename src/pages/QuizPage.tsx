@@ -38,6 +38,52 @@ export default function QuizPage() {
 
     const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api/v1';
 
+    // Load saved responses from session storage on mount
+    useEffect(() => {
+        const savedResponses = sessionStorage.getItem('quizResponses');
+        if (savedResponses) {
+            try {
+                setResponses(JSON.parse(savedResponses));
+            } catch (e) {
+                console.error('Error parsing saved responses', e);
+            }
+        }
+    }, []);
+
+    // Restore selected options and input value when navigating between questions
+    useEffect(() => {
+        if (questions.length > 0 && questions[currentIndex]) {
+            const currentQuestion = questions[currentIndex];
+            const currentResponse = responses[currentIndex];
+
+            if (currentResponse) {
+                if (currentQuestion.type === 'text-input' || currentQuestion.type === 'number-input') {
+                    setInputValue(currentResponse.answer || '');
+                    setSelectedOptions([]);
+                } else if (currentQuestion.type === 'multi-select') {
+                    const answers = Array.isArray(currentResponse.answer) ? currentResponse.answer : [];
+                    const indices = currentQuestion.options
+                        .map((opt, idx) => (answers.includes(opt.text) ? idx : -1))
+                        .filter(idx => idx !== -1);
+                    setSelectedOptions(indices);
+                    setInputValue('');
+                } else if (currentQuestion.type === 'single-select') {
+                    const answer = currentResponse.answer;
+                    const index = currentQuestion.options.findIndex(opt => opt.text === answer);
+                    setSelectedOptions(index !== -1 ? [index] : []);
+                    setInputValue('');
+                } else {
+                    setSelectedOptions([]);
+                    setInputValue('');
+                }
+            } else {
+                // No previous response, clear for new question
+                setSelectedOptions([]);
+                setInputValue('');
+            }
+        }
+    }, [currentIndex, questions, responses]);
+
     useEffect(() => {
         const fetchQuestions = async () => {
             try {
