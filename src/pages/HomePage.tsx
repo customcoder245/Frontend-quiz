@@ -23,10 +23,10 @@ export default function HomePage() {
 
   return (
     /* Entire page locked to viewport height with no scroll */
-    <div className="selection:bg-primary/20 selection:text-primary-foreground flex h-screen flex-col overflow-hidden bg-white py-8 font-sans">
+    <div className="selection:bg-primary/20 selection:text-primary-foreground flex xl:h-screen flex-col overflow-hidden bg-white md:py-8 py-6 font-sans">
       {/* Header / Nav - UI preserved exactly as original */}
-
-      <header className="bg-opacity-30 mx-auto flex w-full max-w-[1360px] items-center justify-between rounded-full bg-white px-8 py-3.5 shadow-[4px_4px_10px_0px_rgba(0,0,0,0.05)] backdrop-blur-[40px] backdrop-blur-lg">
+<div className='md:mx-6'>
+      <header className="bg-opacity-30 mx-auto flex w-full max-w-[1360px] items-center justify-between rounded-full bg-white md:px-8 px-6 py-3.5 md:shadow-[4px_4px_10px_0px_rgba(0,0,0,0.05)] backdrop-blur-[40px] backdrop-blur-lg">
         <div className="flex items-center">
           <img
             src="/logo.png"
@@ -62,14 +62,14 @@ export default function HomePage() {
           </nav>
           {isLoggedIn ? (
             <button
-              className="hidden h-[35px] cursor-pointer rounded-full bg-gradient-to-r from-[#D90655] to-[#FC3F39] px-6 text-sm font-bold text-white shadow-xl transition-all hover:opacity-90 active:scale-[0.98] md:block"
+              className=" leading-[1.8em] hidden py-2 cursor-pointer rounded-full bg-gradient-to-r from-[#D90655] to-[#FC3F39] px-6 text-sm font-normal text-white shadow-xl transition-all hover:opacity-90 active:scale-[0.98] md:block"
               onClick={handleLogout}
             >
-              Logout
+            Logout
             </button>
           ) : (
             <button
-              className="hidden h-[35px] cursor-pointer rounded-full bg-gradient-to-r from-[#D90655] to-[#FC3F39] px-6 text-sm font-bold text-white shadow-xl transition-all hover:opacity-90 active:scale-[0.98] md:block"
+              className="hidden leading-[1.8em] py-2 cursor-pointer rounded-full bg-gradient-to-r from-[#D90655] to-[#FC3F39] px-6 text-sm font-normal text-white shadow-xl transition-all hover:opacity-90 active:scale-[0.98] md:block"
               onClick={() => navigate('/login')}
             >
               Login
@@ -85,7 +85,7 @@ export default function HomePage() {
           </button>
         </div>
       </header>
-
+</div>
       {/* Mobile Sidebar / Slider */}
       <div
         className={`fixed inset-0 z-50 flex justify-end transition-all duration-300 md:hidden ${isMobileMenuOpen ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0'}`}
@@ -112,22 +112,22 @@ export default function HomePage() {
 
           <nav className="flex flex-col space-y-6">
             <ul>
-              <li>
+              <li className='py-2'>
                 <a href="#" className="text-base font-normal text-[#10181F]">
                   Home
                 </a>
               </li>
-              <li>
+               <li className='py-2'>
                 <a href="#" className="text-base font-normal text-[#10181F]">
                   About us
                 </a>
               </li>
-              <li>
+              <li className='py-2'>
                 <a href="#" className="text-base font-normal text-[#10181F]">
                   FAQ
                 </a>
               </li>
-              <li>
+              <li className='py-2'>
                 <a href="#" className="text-base font-normal text-[#10181F]">
                   Contact us
                 </a>
@@ -135,9 +135,9 @@ export default function HomePage() {
             </ul>
           </nav>
 
-          <div className="mt-auto border-t border-black/5 pt-8">
+          <div className="mt-auto border-t border-black/5">
             <button
-              className="shadow-primary/20 h-[50px] w-full rounded-full bg-gradient-to-r from-[#D90655] to-[#FC3F39] text-[16px] font-bold text-white shadow-xl transition-all hover:opacity-90 active:scale-[0.98]"
+              className="shadow-primary/20 w-full py-2 rounded-full bg-gradient-to-r from-[#D90655] to-[#FC3F39] text-[16px] font-bold text-white shadow-xl transition-all hover:opacity-90 active:scale-[0.98]"
               onClick={() => navigate('/login')}
             >
               Login
@@ -147,35 +147,33 @@ export default function HomePage() {
       </div>
 
       {/* Main Hero Section */}
-      <main className="md:bg-[url('/public/banner.png')] bg-no-repeat bg-right bg-cover h-full mt-4">
+      <main className="md:bg-[url('/public/banner.png')] bg-no-repeat bg-right bg-cover h-full md:mt-4">
           <div className='max-w-[1360px] mx-auto md:px-8'>
-
-          
         <div className='md:flex '>
             <div className="md:pt-32 pt-8 px-6 md:px-0">
                 <div className="space-y-6">
-                <h1 className="font-extrabold text-[56px]  leading-tight">
+                <h1 className="xl:max-w-screen-md max-w-xl font-extrabold lg:text-[56px] text-[40px] m-0 leading-tight amsiproblack">
                     Create your ideal 30-day <br className="hidden xl:block" />
                     Mediterranean meal plan
                 </h1>
-                <p className="font-AmsiPro-Regular text-20px font-bold text-[#1a1a1b]/30 md:text-2xl">
+                <p className="md:text-xl text-base text-[#10181FB2] font-normal mt-5 md:mb-10 mb-8">
                     Take 1-minute FREE test
                 </p>
                 </div>
                 <div className="space-y-6">
-                <p className="font-AmsiPro-Regular text-[13px] font-bold text-[#1a1a1b]/40">
+                <p className="text-[#10181F] font-normal text-sm mb-3">
                     Start by selecting your gender:
                 </p>
 
-                <div className="flex flex-col gap-5 sm:flex-row">
+                <div className="flex flex-col md:gap-5 gap-2 sm:flex-row">
                     <button
-                    className="h-[56px] rounded-[50px] bg-gradient-to-r from-[#D90655] to-[#FC3F39] text-[24px] font-bold text-white shadow-xl shadow-pink-100 transition-all active:scale-[0.98] sm:w-[196px]"
+                    className="amsipro font-normal cursor-pointer shadow-primary/20 py-4 px-14 rounded-full bg-gradient-to-r from-[#D90655] to-[#FC3F39] text-[16px] font-normal text-white transition-all hover:opacity-90 active:scale-[0.98]"
                     onClick={() => navigate('/quiz?gender=female')}
                     >
                     Female
                     </button>
                     <button
-                    className="h-[56px] rounded-[50px] bg-[#1a1a1b] text-[24px] font-bold text-white shadow-xl shadow-black/5 transition-all hover:bg-[#2a2a2b] active:scale-[0.98] sm:w-[195px]"
+                    className="amsipro  font-normal cursor-pointer shadow-primary/20 py-4 px-14 rounded-full bg-[#121A16] text-[16px] font-normal text-white  transition-all hover:opacity-90 active:scale-[0.98]"
                     onClick={() => navigate('/quiz?gender=male')}
                     >
                     Male
@@ -183,7 +181,7 @@ export default function HomePage() {
                 </div>
                 </div>
                 {/* Social Proof */}
-                <div className="flex flex-wrap items-center gap-x-10 gap-y-4 pt-4">
+                <div className="flex flex-wrap items-center gap-x-10 md:gap-y-6 gap-y-3 md:mt-16 mt-10">
                 <div className="flex items-center gap-2">
                     <div className="flex items-center gap-1">
                     {[1, 2, 3, 4, 5].map((i) => (
@@ -193,13 +191,13 @@ export default function HomePage() {
                         />
                     ))}
                     </div>
-                    <p className="text-[13px] font-bold text-[#1a1a1b]">
+                    <p className="text-sm font-normal text-[#10181F]">
                     2475 customer reviews
                     </p>
                 </div>
-                <div className="flex items-center gap-2">
-                    <span className="text-lg">🛡️</span>
-                    <span className="text-[13px] font-bold text-[#1a1a1b]">
+                <div className="flex items-center gap-2 ">
+                    <span className="text-lg"><img src="/public/trusted.svg" alt="" /></span>
+                    <span className="text-sm font-normal text-[#10181F]">
                     Trusted by 127K+
                     </span>
                 </div>
@@ -213,19 +211,20 @@ export default function HomePage() {
       </main>
 
       {/* Sticky Footer */}
-      <footer className="mt-auto w-full shrink-0 px-6 py-6 md:px-12">
-        <div className="mx-auto flex max-w-[1800px] flex-col items-start justify-between gap-6 border-t border-slate-50 pt-2 md:flex-row">
-          <p className="font-AmsiPro-Regular text-[12px] font-bold text-[#1a1a1b]/20">
+      <footer className="px-6 md:py-5 pt-5">
+        <div className="max-w-[1360px] mx-auto md:px-8 md:flex justify-between items-center">
+
+          <p className="text-[#10181F80] font-normal text-xs">
             © 2026 Mediterranean Plan. <br /> All rights reserved.
           </p>
 
-          <div className="max-w-[700px] md:text-right">
-            <p className="font-AmsiPro-Regular text-[12px] leading-relaxed font-bold text-[#1a1a1b]/10">
+          <div className="md:pt-0 pt-3.5">
+            <p className="text-[#10181F80] font-normal text-xs">
               Disclaimer: Results may vary depending on the individual. By{' '}
               <br />
               proceeding, you agree to our{' '}
-              <span className="cursor-pointer underline">Terms of Service</span>
-              , <span className="cursor-pointer underline">Privacy Policy</span>
+              <span className="cursor-pointer ">Terms of Service</span>
+              , <span className="cursor-pointer">Privacy Policy</span>
               .
             </p>
           </div>

@@ -1,9 +1,11 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/Button';
-import { ShieldCheck, CheckCircle2, Star } from 'lucide-react';
+import { ShieldCheck, CheckCircle2, Star, Menu, X } from 'lucide-react';
 
 export default function PredictedResultsPage() {
     const navigate = useNavigate();
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
     return (
         <div className="min-h-screen bg-white font-sans flex flex-col pb-20">
@@ -22,8 +24,76 @@ export default function PredictedResultsPage() {
                         <ShieldCheck className="w-5 h-5 text-primary" />
                         <span>Trusted by 127K+</span>
                     </div>
+
+                    {/* Mobile Menu Toggle */}
+                    <button
+                        className="rounded-full p-2 text-[#1a1a1b] transition-colors hover:bg-black/5 sm:hidden"
+                        onClick={() => setIsMobileMenuOpen(true)}
+                    >
+                        <Menu size={24} />
+                    </button>
                 </div>
             </header>
+
+            {/* Mobile Sidebar */}
+            <div
+                className={`fixed inset-0 z-50 flex justify-end transition-all duration-300 md:hidden ${isMobileMenuOpen ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0'}`}
+            >
+                {/* Backdrop */}
+                <div
+                    className="absolute inset-0 bg-black/20 backdrop-blur-sm"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                />
+
+                {/* Sidebar Panel */}
+                <div
+                    className={`relative flex h-full w-[280px] flex-col bg-white p-6 shadow-2xl transition-transform duration-300 ease-out ${isMobileMenuOpen ? 'translate-x-0' : 'translate-x-full'}`}
+                >
+                    <div className="mb-8 flex items-center justify-between">
+                        <span className="text-xl font-black text-[#1a1a1b]">Menu</span>
+                        <button
+                            onClick={() => setIsMobileMenuOpen(false)}
+                            className="rounded-full p-2 text-[#1a1a1b] transition-colors hover:bg-black/5"
+                        >
+                            <X size={24} />
+                        </button>
+                    </div>
+
+                    <nav className="flex flex-col space-y-6">
+                        <ul>
+                            <li className='py-2'>
+                                <a href="#" className="text-base font-normal text-[#10181F]">
+                                    Home
+                                </a>
+                            </li>
+                            <li className='py-2'>
+                                <a href="#" className="text-base font-normal text-[#10181F]">
+                                    About us
+                                </a>
+                            </li>
+                            <li className='py-2'>
+                                <a href="#" className="text-base font-normal text-[#10181F]">
+                                    FAQ
+                                </a>
+                            </li>
+                            <li className='py-2'>
+                                <a href="#" className="text-base font-normal text-[#10181F]">
+                                    Contact us
+                                </a>
+                            </li>
+                        </ul>
+                    </nav>
+
+                    <div className="mt-auto border-t border-black/5">
+                        <button
+                            className="shadow-primary/20 w-full py-2 rounded-full bg-gradient-to-r from-[#D90655] to-[#FC3F39] text-[16px] font-bold text-white shadow-xl transition-all hover:opacity-90 active:scale-[0.98]"
+                            onClick={() => navigate('/login')}
+                        >
+                            Login
+                        </button>
+                    </div>
+                </div>
+            </div>
 
             <main className="flex-1 max-w-2xl mx-auto w-full px-6 py-12 flex flex-col items-center">
                 <div className="text-center space-y-3 mb-12">
