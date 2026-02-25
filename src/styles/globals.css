@@ -80,5 +80,92 @@
     body {
         @apply bg-background text-foreground;
         font-feature-settings: "rlig" 1, "calt" 1;
+        
     }
 }
+
+@font-face {
+    font-family: 'AmsiProBlack';
+    src: url('../src/assets/fonts/AmsiPro-Black.woff2') format('woff2'),
+        url('../src/assets/fonts/AmsiPro-Black.woff') format('woff');
+    font-weight: 900;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'AmsiProBold';
+    src: url('../src/assets/fonts/AmsiPro-Bold.woff2') format('woff2'),
+        url('../src/assets/fonts/AmsiPro-Bold.woff') format('woff');
+    font-weight: bold;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'AmsiPro';
+    src: url('../src/assets/fonts/AmsiPro-Light.woff2') format('woff2'),
+        url('../src/assets/fonts/AmsiPro-Light.woff') format('woff');
+    font-weight: 300;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'AmsiPro';
+    src: url('../src/assets/fonts/AmsiPro-SemiBold.woff2') format('woff2'),
+        url('../src/assets/fonts/AmsiPro-SemiBold.woff') format('woff');
+    font-weight: 600;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'AmsiPro-XLight';
+    src: url('../src/assets/fonts/AmsiPro-XLight.woff2') format('woff2'),
+        url('../src/assets/fonts/AmsiPro-XLight.woff') format('woff');
+    font-weight: 300;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'AmsiProRegular';
+    src: url('../src/assets/fonts/AmsiPro-Regular.woff2') format('woff2'),
+        url('../src/assets/fonts/AmsiPro-Regular.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Baikal Trial';
+    src: url('../src/assets/fonts/BaikalTrial-SemiBold.woff2') format('woff2'),
+        url('../src/assets/fonts/BaikalTrial-SemiBold.woff') format('woff');
+    font-weight: 600;
+    font-style: normal;
+    font-display: swap;
+}
+
+*{
+  font-family: AmsiProRegular;
+}
+
+.amsiproblack{
+    font-family: 'AmsiProBlack';
+}
+
+.amsiprobold{
+ font-family: 'AmsiProBold';
+}
+
+.amsipro{
+  font-family: 'AmsiPro';
+}
+.amsixlight{
+   font-family: 'AmsiPro-XLight';
+}
+.baikal-trial{
+   font-family: 'Baikal Trial';
+}
+
