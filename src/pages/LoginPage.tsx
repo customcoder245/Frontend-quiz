@@ -47,19 +47,19 @@ export default function LoginPage() {
     };
 
     return (
-        <div className="min-h-screen flex flex-col items-center justify-center bg-white p-4 sm:p-6 font-sans">
-            <div className="w-full max-w-[450px] space-y-8">
+        <div className="flex flex-col bg-white pt-5 font-sans xl:h-screen">
+            <div className="mx-auto w-full max-w-xl ">
                 {/* Logo from Screenshot */}
                 <div className="flex justify-center mb-8">
                     <img src="/logo.png" alt="The Mediterranean Diet" className="h-16 md:h-20 w-auto object-contain" />
                 </div>
 
                 <div className="space-y-4">
-                    <h1 className="text-4xl md:text-5xl font-black text-[#1a1a1b] leading-[1.1] tracking-tight">
-                        Sign in to your <br />
+                    <h1 className="max-w-72 mx-auto baikal-trial text-center text-[28px] leading-[1.2em] font-semibold text-[#10181F] md:text-[32px]">
+                        Sign in to your
                         ideal meal plan
                     </h1>
-                    <p className="text-[#1a1a1b] font-medium opacity-60">
+                    <p className="text-center text-[#10181FB2] text-base capitalize font-normal mb-4">
                         Take 1-minute FREE test or access your account
                     </p>
                 </div>

@@ -143,19 +143,19 @@ export default function EmailFormPage() {
 
             <main className="max-w-xl mx-auto w-full px-6 pt-8">
                 <h2 className="md:text-[32px] text-[28px] font-semibold leading-[1.2em] baikal-trial text-[#10181F] text-center">
-                    Enter your name and email to <br /> view the results
+                    Enter your name and email to view the results
                 </h2>
 
                 {error && (
-                    <div className="mb-6 p-4 bg-red-50 text-red-600 rounded-2xl border border-red-100 font-bold">
+                    <div className="my-6 p-4 bg-red-50 text-red-600 rounded-lg border border-red-100 font-bold">
                         {error}
                     </div>
                 )}
 
-                <form className="w-full mt-8 space-y-4 mb-8" onSubmit={handleSubmit}>
+                <form className="w-full mt-8 space-y-4 " onSubmit={handleSubmit}>
                     <Input
                         placeholder="Name"
-                        className="rounded-lg font-normal border-[1px] border-[#10181F1A] h-[60px] text-xl bg-white placeholder:text-[#10181F80]"
+                        className="rounded-lg font-normal border-[1px] border-[#10181F1A] md:h-[60px] h-[48px] md:text-xl text-base bg-white placeholder:text-[#10181F80]"
                         required
                         value={name}
                         onChange={(e) => setName(e.target.value)}
@@ -163,27 +163,29 @@ export default function EmailFormPage() {
                     <Input
                         placeholder="email@email.com"
                         type="email"
-                        className="focus-visible:shadow-none rounded-lg font-normal border-[1px] border-[#10181F1A] h-[60px] text-xl bg-white placeholder:text-[#10181F80]"
+                        className="focus-visible:shadow-none rounded-lg font-normal border-[1px] border-[#10181F1A] md:h-[60px] h-[48px]  md:text-xl text-base bg-white placeholder:text-[#10181F80]"
                         required
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                     />
 
-                    <div className="bg-[#088E441A] border border-[#088E441A] md:p-8  flex rounded-[14px] text-base font-normal gap-4 ">
-                        <div className="w-[10%]">
+                    <div className="bg-[#088E441A] border border-[#088E441A] md:p-8 p-6  flex rounded-[14px] text-base font-normal gap-4 ">
+                        <div className="md:w-[10%] w-[20%]">
                             <img src="/lock.svg" className='w-[24px] h[24px]' alt="" />
                         </div>
-                        <p className="text-[#10181FB2]">
+                        <p className="text-[#10181FB2] md:text-base text-sm">
                             We respect your privacy. Your email is safe with us. We&apos;ll send you a copy of your results for easy access — no spam, ever.
                         </p>
                     </div>
                     <div className='text-center mt-6'>
                     <Button
-                        className="text-xl font-black rounded-full h-[56px] px-[56px]"
+                        className="md:text-2xl text-xl font-normal rounded-full px-14 !h-full pt-2 md:pb-4 pb-3.5"
                         type="submit"
                         disabled={isLoading}
                     >
+                        <span>
                         {isLoading ? <Loader2 className="animate-spin" /> : 'Continue'}
+                        </span>
                     </Button>
                     </div>
                 </form>
