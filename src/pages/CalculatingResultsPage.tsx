@@ -330,7 +330,7 @@ export default function CalculatingResultsPage() {
         </div>
         <div className="mt-6 text-center">
           <Button
-            className={`rounded-full px-14 pt-2 pb-3.5 text-xl font-normal md:pb-4 md:text-2xl ${progress < 100 ? 'cursor-not-allowed opacity-50' : 'opacity-100'}`}
+            className={`rounded-full md:max-w-[214px] max-w-[196px] px-14 pt-2 pb-3.5 text-xl font-normal md:pb-4 md:text-2xl ${progress < 100 ? 'cursor-not-allowed opacity-50' : 'opacity-100'}`}
             disabled={progress < 100}
             onClick={() => navigate('/predicted')}
           >

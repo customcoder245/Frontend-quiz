@@ -168,4 +168,17 @@
 }
 .baikal-trial{
    font-family: 'Baikal Trial';
-} */
+}
+
+
+#login-bg {
+    background: url(/login.jpg);
+}
+/* Common Classes */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  transition: background-color 5000s ease-in-out 0s;
+}
+ 

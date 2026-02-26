@@ -29,7 +29,7 @@ export default function BreakPage1() {
   const progress = ((fromIndex + 1) / totalQuestions) * 100;
 
   return (
-    <div className="flex flex-col bg-white pt-5 font-sans xl:h-screen overflow-hidden">
+    <div className="flex flex-col bg-white pt-5 font-sans xl:h-screen">
       {/* Header */}
       <header className="bg-opacity-30 mx-auto flex w-full max-w-[1360px] items-center justify-between bg-white px-6 py-3.5 backdrop-blur-[40px] backdrop-blur-lg md:px-8">
         <div
@@ -126,7 +126,7 @@ export default function BreakPage1() {
       </div>
 
       {/* Snapshot Content */}
-      <main className="max-w-xl mx-auto w-full px-6 pt-8 pb-10 overflow-y-auto no-scrollbar">
+      <main className="max-w-xl mx-auto w-full px-6 pt-8 pb-10">
         <div className="mb-8 text-center">
           <p className="text-[#10181FB2] text-base capitalize font-normal mb-4">
             Your health snapshot
@@ -148,24 +148,24 @@ export default function BreakPage1() {
 
             <div className="space-y-8 rounded-[14px] bg-[#10181F08] md:p-8 p-6 text-center sm:text-left">
               <div className="mb-7">
-                <h3 className="md:text-[24px] text-[20px] font-semibold leading-[1.2em] baikal-trial text-[#10181F]">
+                <h3 className="md:text-[24px] text-[20px] font-semibold leading-[1.2em] baikal-trial text-[#10181F] text-left">
                   Somewhat active
                 </h3>
-                <p className="text-[#10181FB2] md:text-[20px] text-[16px]">
+                <p className="text-[#10181FB2] md:text-[20px] text-[16px] text-left">
                   2-4 workouts per week or active job
                 </p>
               </div>
 
               {/* Slider Placeholder */}
-              <div className="relative pt-6">
+              <div className="relative">
                 <div className="h-2 w-full overflow-hidden rounded-full bg-[#1a1a1b]/5">
-                  <div className="h-full w-1/2 rounded-full bg-gradient-to-r from-[#F4B400] via-[#34A853] to-[#088E44]" />
+                  <div className="h-full w-1/2 rounded-full bg-[linear-gradient(90deg,rgba(8,142,68,0)_0%,#088E44_100%)]" />
                 </div>
-                <div className="absolute top-[21px] left-1/2 h-4 w-4 -translate-x-1/2 rounded-full border-2 border-white bg-[#10181F] shadow-lg" />
-                <div className="mt-4 flex justify-between text-[10px] font-black tracking-widest text-[#10181FB2] uppercase">
-                  <span>Low</span>
-                  <span className="text-[#34a853]">Moderate</span>
-                  <span>High</span>
+                <div className="absolute top-[-4px] left-1/2 h-4 w-4 -translate-x-1/2 rounded-full border-2 border-white bg-[#10181F] shadow-lg" />
+                <div className="mt-4 flex justify-between">
+                  <span className='text-base text-[#10181FB2]'>Low</span>
+                  <span className="text-[#088E44]">Moderate</span>
+                  <span className='text-base text-[#10181FB2]'>High</span>
                 </div>
               </div>
             </div>
@@ -173,28 +173,26 @@ export default function BreakPage1() {
         </div>
 
         {/* Success Box */}
-        <div className="mb-10 flex w-full items-start space-x-4 rounded-[24px] border-2 border-[#088E441A] bg-[#E7F4ED] p-6">
-          <div className="mt-1 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-[#088E44] text-white">
-            <CheckCircle2 className="h-5 w-5" />
-          </div>
-          <div className="space-y-1">
-            <p className="text-lg font-black text-[#10181F]">
-              You&apos;re off to a good start!
-            </p>
-            <p className="font-medium text-[#10181FB2]">
-              Let&apos;s keep going to tailor your plan even more
+      <div className="flex gap-4 rounded-[14px] border border-[#088E441A] bg-[#088E441A] p-6 mb-8">
+          <img src="/check.svg" className="h-6 w-6 mt-1" alt="" />
+          <div>
+            <h3 className="mb-2 text-xl font-semibold text-[#10181F] leading-tight">
+              You`re off to a good start!
+            </h3>
+            <p className="text-base text-[#10181FB2] leading-relaxed">
+              Let`s keep going to tailor your plan even more
             </p>
           </div>
         </div>
-
+ <div className="text-center">
         <button
-          className="cursor-pointer w-full h-16 rounded-full bg-gradient-to-r from-[#D90655] to-[#FC3F39] text-white text-xl font-bold shadow-xl transition-transform hover:scale-[1.02] active:scale-[0.98]"
+          className="cursor-pointer w-full md:max-w-[214px] max-w-[196px] h-16 rounded-full bg-gradient-to-r from-[#D90655] to-[#FC3F39] text-white text-xl font-bold shadow-xl transition-transform hover:scale-[1.02] active:scale-[0.98]"
           onClick={() => navigate(`/quiz?index=${fromIndex + 1}`)}
         >
           Continue
         </button>
-
-        <div className="mt-12 flex items-center justify-center space-x-2 py-6 text-xs font-bold text-[#1a1a1b]/60">
+</div>
+        <div className="mt-8 flex items-center justify-center space-x-2 pb-6 text-xs font-bold text-[#1a1a1b]/60">
           <div className="h-2 w-2 animate-pulse rounded-full bg-[#088E44]" />
           <span className="text-sm font-normal text-[#10181FCC]">856 people are taking this quiz right now</span>
         </div>

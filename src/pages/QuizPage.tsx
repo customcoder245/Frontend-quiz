@@ -408,11 +408,11 @@ export default function QuizPage() {
                                         )}
                                         {/* Feet Dropdown */}
                                         <div className="flex flex-col items-center gap-3">
-                                            <span className="text-[#10181FB2] text-sm">Feet</span>
+                                            <span className="text-[#10181FB2] text-base capitalize font-normal">Feet</span>
                                             <div className="relative z-20">
                                                 <button
                                                     onClick={() => setOpenDropdown(openDropdown === 'feet' ? null : 'feet')}
-                                                    className={`cursor-pointer w-[120px] h-[72px] bg-white border ${openDropdown === 'feet' ? 'border-[#FC3F39]' : 'border-[#10181F26]'} rounded-xl text-2xl font-normal flex items-center justify-center transition-colors`}
+                                                    className={`cursor-pointer w-[100px] h-[55px] bg-white border ${openDropdown === 'feet' ? 'border-[#FC3F39]' : 'border-[#10181F26]'} rounded-xl text-xl font-normal flex items-center justify-center transition-colors`}
                                                 >
                                                     {feet}&apos;
                                                 </button>
@@ -434,11 +434,11 @@ export default function QuizPage() {
 
                                         {/* Inches Dropdown */}
                                         <div className="flex flex-col items-center gap-3">
-                                            <span className="text-[#10181FB2] text-sm">Inches</span>
+                                            <span className="text-[#10181FB2] text-base capitalize font-normal">Inches</span>
                                             <div className="relative z-20">
                                                 <button
                                                     onClick={() => setOpenDropdown(openDropdown === 'inches' ? null : 'inches')}
-                                                    className={`cursor-pointer w-[120px] h-[72px] bg-white border ${openDropdown === 'inches' ? 'border-[#FC3F39]' : 'border-[#10181F26]'} rounded-xl text-2xl font-normal flex items-center justify-center transition-colors`}
+                                                    className={`cursor-pointer w-[100px] h-[55px] bg-white border ${openDropdown === 'inches' ? 'border-[#FC3F39]' : 'border-[#10181F26]'} rounded-xl text-xl font-normal flex items-center justify-center transition-colors`}
                                                 >
                                                     {inches}&quot;
                                                 </button>
@@ -466,7 +466,7 @@ export default function QuizPage() {
                                     <button
                                         onClick={handleNext}
                                         disabled={!inputValue}
-                                        className="cursor-pointer w-full h-16 rounded-full bg-gradient-to-r from-[#D90655] to-[#FC3F39] text-white text-xl font-black shadow-xl disabled:opacity-50"
+                                        className="cursor-pointer w-full md:max-w-[214px] max-w-[196px] h-16 rounded-full bg-gradient-to-r from-[#D90655] to-[#FC3F39] text-white text-xl font-bold shadow-xl transition-transform hover:scale-[1.02] active:scale-[0.98]"
                                     >
                                         Continue
                                     </button>
@@ -474,7 +474,7 @@ export default function QuizPage() {
                             ) : currentQuestion.questionText.toLowerCase().includes('weight') ? (
                                 <div className="flex flex-col items-center w-full max-w-md mx-auto">
                                     {/* Unit Toggle */}
-                                    <div className="flex bg-[#f4f4f5] p-1 rounded-full mb-10 w-32">
+                                    <div className="flex p-1 rounded-full mb-6 gap-2 max-w-[220px] w-full bg-[#10181F0D] p-[7px] ">
                                         <button
                                             onClick={() => {
                                                 if (weightUnit === 'lbs') return;
@@ -484,7 +484,7 @@ export default function QuizPage() {
                                                 setWeightValue(newVal);
                                                 setInputValue(`${newVal} lbs`);
                                             }}
-                                            className={`flex-1 py-2 rounded-full text-sm font-semibold transition-all ${weightUnit === 'lbs' ? 'bg-[#FC3F39] text-white shadow-md' : 'text-[#10181FB2]'}`}
+                                            className={`cursor-pointer flex-1 rounded-full  font-semibold transition-all ${weightUnit === 'lbs' ? 'bg-gradient-to-r from-[#D90655] to-[#FC3F39] text-white ' : 'text-[#10181FB2] text-base'}`}
                                         >
                                             lbs
                                         </button>
@@ -497,7 +497,7 @@ export default function QuizPage() {
                                                 setWeightValue(newVal);
                                                 setInputValue(`${newVal} kg`);
                                             }}
-                                            className={`flex-1 py-2 rounded-full text-sm font-semibold transition-all ${weightUnit === 'kg' ? 'bg-[#FC3F39] text-white shadow-md' : 'text-[#10181FB2]'}`}
+                                            className={`cursor-pointer flex-1 py-2 rounded-full  font-semibold transition-all ${weightUnit === 'kg' ? 'bg-gradient-to-r from-[#D90655] to-[#FC3F39] text-white shadow-md' : 'text-[#10181FB2] text-base'}`}
                                         >
                                             kg
                                         </button>
@@ -505,10 +505,10 @@ export default function QuizPage() {
 
                                     {/* Weight Display */}
                                     <div className="mb-8 flex items-baseline gap-2">
-                                        <span className="text-6xl md:text-7xl font-bold text-[#FC3F39] baikal-trial">
+                                        <span className="text-6xl md:text-[52px] text-[28px] baikal-trial font-bold text-[#FC3F39] ">
                                             {weightValue}
                                         </span>
-                                        <span className="text-2xl font-normal text-[#10181FB2]">
+                                        <span className="md:text-2xl text-xl font-normal text-[#10181FB2]">
                                             {weightUnit}
                                         </span>
                                     </div>
@@ -543,13 +543,14 @@ export default function QuizPage() {
                                             <span>{weightUnit === 'lbs' ? '400 lbs' : '181 kg'}</span>
                                         </div>
                                     </div>
-
+                                      <div className='text-center w-full'>           
                                     <button
                                         onClick={handleNext}
-                                        className="cursor-pointer w-full h-16 rounded-full bg-gradient-to-r from-[#D90655] to-[#FC3F39] text-white text-xl font-black shadow-xl"
+                                        className="cursor-pointer w-full md:max-w-[214px] max-w-[196px] h-16 rounded-full bg-gradient-to-r from-[#D90655] to-[#FC3F39] text-white text-xl font-bold shadow-xl transition-transform hover:scale-[1.02] active:scale-[0.98]"
                                     >
                                         Continue
                                     </button>
+                                    </div>
                                 </div>
                             ) : (
                                 <>
@@ -560,13 +561,15 @@ export default function QuizPage() {
                                         onChange={(e) => setInputValue(e.target.value)}
                                         placeholder="Enter value..."
                                     />
+                                    <div className='text-center'>
                                     <button
                                         onClick={handleNext}
                                         disabled={!inputValue}
-                                        className="cursor-pointer w-full h-16 rounded-full bg-gradient-to-r from-[#D90655] to-[#FC3F39] text-white text-xl font-black shadow-xl disabled:opacity-50"
+                                        className="cursor-pointer w-full md:max-w-[214px] mx-auto max-w-[196px] h-16 rounded-full bg-gradient-to-r from-[#D90655] to-[#FC3F39] text-white text-xl font-bold shadow-xl transition-transform hover:scale-[1.02] active:scale-[0.98]"
                                     >
                                         Continue
                                     </button>
+                                    </div>
                                 </>
                             )}
                         </div>
@@ -587,13 +590,15 @@ export default function QuizPage() {
                                 </button>
                             ))}
                             {currentQuestion.type === 'multi-select' && (
+                                <div className='text-center'>
                                 <button
                                     onClick={handleNext}
                                     disabled={selectedOptions.length === 0}
-                                    className="cursor-pointer w-full h-16 rounded-full bg-gradient-to-r from-[#D90655] to-[#FC3F39] text-white text-xl font-black shadow-xl mt-6 disabled:opacity-50"
+                                    className="md:max-w-[214px] max-w-[196px] mx-auto cursor-pointer w-full h-16 rounded-full bg-gradient-to-r from-[#D90655] to-[#FC3F39] text-white text-xl font-black shadow-xl mt-6 disabled:opacity-50"
                                 >
                                     Continue
                                 </button>
+                                </div>
                             )}
                         </>
                     )}

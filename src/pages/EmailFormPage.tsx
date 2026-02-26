@@ -179,7 +179,7 @@ export default function EmailFormPage() {
                     </div>
                     <div className='text-center mt-6'>
                     <Button
-                        className="md:text-2xl text-xl font-normal rounded-full px-14 !h-full pt-2 md:pb-4 pb-3.5"
+                        className="md:max-w-[214px] max-w-[196px] md:text-2xl text-xl font-normal rounded-full px-14 !h-full pt-2 md:pb-4 pb-3.5"
                         type="submit"
                         disabled={isLoading}
                     >
