@@ -57,8 +57,8 @@ export default function QuizPage() {
     const [weightUnit, setWeightUnit] = useState<'lbs' | 'kg'>('lbs');
     const [weightValue, setWeightValue] = useState<number>(180);
 
-    const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
-    const gender = searchParams.get('gender') || sessionStorage.getItem('quizGender') || 'female';
+    const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api/v1';
+    const gender = sessionStorage.getItem('quizGender') || 'female';
 
     // Load saved responses from session storage on mount
     useEffect(() => {
@@ -172,13 +172,6 @@ export default function QuizPage() {
         saveResponse(answer);
     };
 
-    const handleBack = () => {
-        if (currentIndex > 0) {
-            setCurrentIndex(currentIndex - 1);
-        } else {
-            navigate('/');
-        }
-    };
 
     const handleOptionSelect = (index: number) => {
         const currentQuestion = questions[currentIndex];

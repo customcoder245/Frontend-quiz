@@ -88,7 +88,7 @@ export default function BreakPage2() {
     }
 
     // Try to fetch actual questions length to sync progress bar perfectly
-    const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+    const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api/v1';
     const gender = sessionStorage.getItem('quizGender') || 'female';
     fetch(`${API_BASE_URL}/questions?gender=${gender}&isPopup=false`)
       .then(res => res.json())
