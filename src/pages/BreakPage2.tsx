@@ -1,21 +1,117 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/Button';
+import { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
-  ShieldCheck,
-  CheckCircle2,
-  Heart,
-  AlertTriangle,
   Menu,
   X,
 } from 'lucide-react';
 
 export default function BreakPage2() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const fromIndex = parseInt(searchParams.get('index') || searchParams.get('fromIndex') || '0');
+
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [totalQuestions, setTotalQuestions] = useState(21);
+  const [profile, setProfile] = useState({
+    age: '32',
+    height: 165,
+    weight: 82,
+    goalWeight: 62,
+    bmi: 30.1,
+    category: 'Overweight',
+    idealBmi: 21.5,
+    unit: 'kg'
+  });
+
+  useEffect(() => {
+    const saved = sessionStorage.getItem('quizResponses');
+    if (saved) {
+      const responses = JSON.parse(saved);
+
+      let age = '32';
+      let weightKg = 82;
+      let heightM = 1.65;
+      let goalWeightKg = 62;
+
+      responses.forEach((resp: any) => {
+        const text = resp.questionText?.toLowerCase() || '';
+        const answer = resp.answer || '';
+
+        if (text.includes('age') || text.includes('how old')) {
+          age = answer;
+        } else if (text.includes('height')) {
+          if (answer.includes("'")) {
+            const ft = parseInt(answer.match(/(\d+)'/)?.[1] || '5');
+            const inch = parseInt(answer.match(/(\d+)"/)?.[1] || '6');
+            const totalInches = (ft * 12) + inch;
+            heightM = totalInches * 0.0254;
+          } else {
+            const cm = parseInt(answer.match(/(\d+)/)?.[1] || '165');
+            heightM = cm / 100;
+          }
+        } else if (text.includes('current weight')) {
+          const val = parseInt(answer.match(/(\d+)/)?.[1] || '180');
+          if (answer.toLowerCase().includes('lbs')) {
+            weightKg = val * 0.45359237;
+          } else {
+            weightKg = val;
+          }
+        } else if (text.includes('goal weight')) {
+          const val = parseInt(answer.match(/(\d+)/)?.[1] || '150');
+          if (answer.toLowerCase().includes('lbs')) {
+            goalWeightKg = val * 0.45359237;
+          } else {
+            goalWeightKg = val;
+          }
+        }
+      });
+
+      // Weight (kg) ÷ Height² (m²) - Standard Metric Formula
+      const bmi = parseFloat((weightKg / (heightM * heightM)).toFixed(1));
+
+      let category = 'Normal';
+      if (bmi < 18.5) category = 'Underweight';
+      else if (bmi < 25) category = 'Normal';
+      else if (bmi < 30) category = 'Overweight';
+      else category = 'Obese';
+
+      setProfile({
+        age,
+        height: Math.round(heightM * 100),
+        weight: Math.round(weightKg),
+        goalWeight: Math.round(goalWeightKg),
+        bmi,
+        category,
+        idealBmi: 21.5,
+        unit: 'kg'
+      });
+    }
+
+    // Try to fetch actual questions length to sync progress bar perfectly
+    const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+    const gender = sessionStorage.getItem('quizGender') || 'female';
+    fetch(`${API_BASE_URL}/questions?gender=${gender}&isPopup=false`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.questions) setTotalQuestions(data.questions.length);
+      })
+      .catch(() => { });
+
+  }, []);
+
+  const getGaugeRotation = () => {
+    const min = 15;
+    const max = 40;
+    const clampedBmi = Math.min(Math.max(profile.bmi, min), max);
+    const percentage = (clampedBmi - min) / (max - min);
+    // 0% is -90deg, 100% is 90deg
+    return -90 + (percentage * 180);
+  };
+
+  const progress = ((fromIndex + 1) / totalQuestions) * 100;
 
   return (
-    <div className="flex flex-col bg-white pt-5 font-sans xl:h-screen">
+    <div className="flex flex-col bg-white pt-5 font-sans xl:h-screen overflow-hidden">
       {/* Header */}
       <header className="bg-opacity-30 mx-auto flex w-full max-w-[1360px] items-center justify-between bg-white px-6 py-3.5 backdrop-blur-[40px] backdrop-blur-lg md:px-8">
         <div
@@ -104,8 +200,34 @@ export default function BreakPage2() {
         </div>
       </div>
 
+      {/* Progress Section */}
+      <div className="max-w-xl mx-auto w-full mt-6 px-6">
+        <div className="flex items-center justify-between mb-3">
+          <button
+            className="cursor-pointer"
+            onClick={() => navigate(`/quiz?index=${fromIndex}`)}
+          >
+            <img src="/arrow.svg" alt="" />
+          </button>
+          <span className="text-[#10181F] text-base font-normal">
+            {fromIndex + 1}/{totalQuestions}
+          </span>
+        </div>
+
+        <div className="shadow-[inset_1px_1px_4px_0px_#0000001A] w-full h-2 bg-[#f4f4f5] rounded-full relative">
+          <div
+            className="h-full bg-gradient-to-r from-[#D90655] to-[#FC3F39] transition-all duration-500 rounded-full"
+            style={{ width: `${progress}%` }}
+          />
+          <div
+            className="absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-[#10181F] rounded-full shadow-md transition-all duration-500"
+            style={{ left: `calc(${progress}% - 8px)` }}
+          />
+        </div>
+      </div>
+
       {/* Content Area */}
-      <main className="mx-auto w-full max-w-xl px-6 pt-8">
+      <main className="mx-auto w-full max-w-xl px-6 pt-4 pb-10 overflow-y-auto no-scrollbar">
         <div className="mb-8 space-y-3 text-center">
           <p className="mb-4 text-base font-normal text-[#10181FB2] capitalize">
             Your health snapshot
@@ -117,110 +239,96 @@ export default function BreakPage2() {
 
         {/* BMI Card */}
         <div className="mt-6 md:mb-8 mb-4 rounded-[14px] border border-[#10181F1A] md:p-8 p-6 shadow-[-4px_-4px_10px_0px_#00000005]">
-          <div className="">
-            <div className="mb-6 flex items-center gap-3">
-              <div className="">
-                <img src="/heart.svg" alt="" />
+          <div className="mb-6 flex items-center gap-3">
+            <img src="/heart.svg" alt="" />
+            <span className="baikal-trial text-[20px] leading-[1.2em] font-semibold text-[#10181F] md:text-[24px]">
+              Body Mass Index (BMI)
+            </span>
+          </div>
+
+          <div className="grid items-center gap-8 md:grid-cols-2">
+            {/* BMI Gauge SVG */}
+            <div className="relative flex flex-col items-center justify-center">
+              <div className="relative w-full aspect-[2/1]">
+                <svg viewBox="0 0 200 100" className="w-full">
+                  <defs>
+                    <linearGradient id="gaugeGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                      <stop offset="0%" stopColor="#67B1B1" />
+                      <stop offset="40%" stopColor="#F5E49F" />
+                      <stop offset="100%" stopColor="#F28E51" />
+                    </linearGradient>
+                  </defs>
+                  {/* Background Track */}
+                  <path
+                    d="M 20 90 A 80 80 0 0 1 180 90"
+                    fill="none"
+                    stroke="#f4f4f5"
+                    strokeWidth="18"
+                    strokeLinecap="round"
+                  />
+                  {/* Gradient Arc */}
+                  <path
+                    d="M 20 90 A 80 80 0 0 1 180 90"
+                    fill="none"
+                    stroke="url(#gaugeGradient)"
+                    strokeWidth="18"
+                    strokeLinecap="round"
+                  />
+                </svg>
+
+                {/* Needle Placeholder (Indicator) */}
+                <div
+                  className="absolute bottom-[-2px] left-1/2 w-4 h-[75%] origin-bottom transition-transform duration-1000"
+                  style={{ transform: `translateX(-50%) rotate(${getGaugeRotation()}deg)` }}
+                >
+                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-7 h-7 bg-white rounded-full shadow-md border-2 border-white" />
+                </div>
+
+                <div className="absolute inset-0 flex items-end justify-center pb-0">
+                  <div className="text-center">
+                    <p className="text-5xl font-bold text-[#10181F] mb-0.5">{profile.bmi}</p>
+                    <p className="text-sm font-semibold tracking-widest text-[#10181FB2] uppercase leading-none">
+                      {profile.category}
+                    </p>
+                  </div>
+                </div>
               </div>
-              <span className="baikal-trial text-[20px] leading-[1.2em] font-semibold text-[#10181F] md:text-[24px]">
-                Body Mass Index (BMI)
-              </span>
+              <div className="mt-4 flex items-center space-x-2">
+                <div className="h-2 w-2 rounded-full bg-[#088E44]" />
+                <span className="text-sm font-normal text-[#10181FB2]">
+                  Ideal = {profile.idealBmi}
+                </span>
+              </div>
             </div>
 
-            <div className="grid items-center gap-8 md:grid-cols-2">
-              {/* BMI Gauge Placeholder */}
-              <div className="relative flex flex-col items-center justify-center">
-                <div className="relative h-24 w-48 overflow-hidden">
-                  <div className="h-48 w-48 rotate-45 rounded-full border-[16px] border-t-transparent border-l-transparent bg-gradient-to-r from-[#34a853] via-yellow-400 to-orange-500 opacity-20" />
-                  {/* Active part would be here */}
-                  <div className="absolute inset-0 flex items-end justify-center">
-                    <div className="text-center">
-                      <p className="text-4xl font-black text-[#1a1a1b]">31.2</p>
-                      <p className="text-xs font-bold tracking-widest text-[#1a1a1b]/40 uppercase">
-                        Overweight
-                      </p>
-                    </div>
+            {/* BMI Stats */}
+            <div className="space-y-4">
+              <div className="rounded-[12px] bg-[#10181F08] p-5">
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3">
+                    <img src="/age.svg" alt="" className="w-5 h-5 opacity-50" />
+                    <span className="text-lg font-normal text-[#10181F80]">Age:</span>
+                    <span className="text-lg font-medium text-[#10181F] ml-auto">{profile.age}</span>
                   </div>
-                </div>
-                <div className="mt-4 flex items-center space-x-2">
-                  <div className="h-2 w-2 rounded-full bg-[#34a853]" />
-                  <span className="text-xs font-bold text-[#1a1a1b]/40">
-                    Ideal = 21.5
-                  </span>
+                  <div className="flex items-center gap-3">
+                    <img src="/height.svg" alt="" className="w-5 h-5 opacity-50" />
+                    <span className="text-lg font-normal text-[#10181F80]">Height:</span>
+                    <span className="text-lg font-medium text-[#10181F] ml-auto">{profile.height} cm</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <img src="/weight.svg" alt="" className="w-5 h-5 opacity-50" />
+                    <span className="text-lg font-normal text-[#10181F80]">Weight:</span>
+                    <span className="text-lg font-medium text-[#10181F] ml-auto">{profile.weight} kg</span>
+                  </div>
                 </div>
               </div>
-
-              {/* BMI Stats */}
-              <div className="space-y-4">
-                <div className="rounded-[12px] bg-[#10181F08] md:p-5.5 p-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-[12px]">
-                      <div className="flex items-center gap-[6px]">
-                        <div>
-                          <img src="/age.svg" alt="" />
-                        </div>
-                        <span className="text-base font-normal text-[#10181F80] md:text-xl">
-                          Age:
-                        </span>
-                      </div>
-                      <div>
-                        <span className="text-base font-normal text-[#10181F] md:text-xl">
-                          32
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="my-3 flex items-center justify-between md:my-6">
-                    <div className="flex items-center gap-[12px]">
-                      <div className="flex items-center gap-[6px]">
-                        <div>
-                          <img src="/height.svg" alt="" />
-                        </div>
-                        <span className="text-base font-normal text-[#10181F80] md:text-xl">
-                          Height:
-                        </span>
-                      </div>
-                      <div>
-                        <span className="text-base font-normal text-[#10181F] md:text-xl">
-                          165 cm
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-[12px]">
-                      <div className="flex items-center gap-[6px]">
-                        <div>
-                          <img src="/weight.svg" alt="" />
-                        </div>
-                        <span className="text-base font-normal text-[#10181F80] md:text-xl">
-                          Weight:
-                        </span>
-                      </div>
-                      <div>
-                        <span className="text-base font-normal text-[#10181F] md:text-xl">
-                          82 kg
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div className="bg-[#088E441A] rounded-[8px] py-3 px-3.5">
-                   <div className="flex items-center gap-[12px]">
-                      <div className="flex items-center gap-[6px]">
-                        <div>
-                          <img src="/goal.svg" alt="" />
-                        </div>
-                        <span className="text-base font-normal text-[#10181F80] md:text-xl">
-                          Goal:
-                        </span>
-                      </div>
-                      <div>
-                        <span className="text-base font-normal text-[#10181F] md:text-xl">
-                         Lose 20 kg
-                        </span>
-                      </div>
-                    </div>
+              <div className="bg-[#E7F4ED] rounded-[8px] py-4 px-5">
+                <div className="flex items-center gap-3">
+                  <img src="/goal.svg" alt="" className="w-5 h-5" />
+                  <span className="text-lg font-normal text-[#10181F80]">Goal:</span>
+                  <span className="text-lg font-bold text-[#10181F] ml-auto">
+                    {profile.weight > profile.goalWeight ? `Lose ${profile.weight - profile.goalWeight} kg` : `Gain ${profile.goalWeight - profile.weight} kg`}
+                  </span>
                 </div>
               </div>
             </div>
@@ -228,42 +336,40 @@ export default function BreakPage2() {
         </div>
 
         {/* Risk Box */}
-        <div className="flex gap-4 rounded-[14px] border border-[#FCB6401A] bg-[#FCB6401A] p-6 text-base font-normal md:p-8">
-          <div className="md:w-[15%] w-[30%]">
-            <img src="/unhealthy.svg" className="h[24px] w-[24px]" alt="" />
-          </div>
+        <div className="flex gap-4 rounded-[14px] border border-[#FCB6401A] bg-[#FEF7EB] p-6 mb-6">
+          <img src="/unhealthy.svg" className="h-6 w-6 mt-1" alt="" />
           <div>
-            <h3 className="mb-2 md:text-xl text-[18px] leading-6 font-normal text-[#10181F]">
+            <h3 className="mb-2 text-xl font-semibold text-[#10181F] leading-tight">
               Risks of an unhealthy BMI
             </h3>
-            <p className="text-sm text-[#10181FB2] md:text-base">
+            <p className="text-base text-[#10181FB2] leading-relaxed">
               High blood pressure, heart diseases, type 2 diabetes, osteoarthritis, certain cancers, depression and anxiety, reduced life expectancy.
             </p>
           </div>
         </div>
 
         {/* Encouragement Box */}
-        <div className=" mt-6 mb-8 flex gap-4 rounded-[14px] border border-[#088E441A] bg-[#088E441A] p-6 text-base font-normal md:p-8">
-          <div className="md:w-[10%] w-[20%]">
-            <img src="/check.svg" className="h[24px] w-[24px]" alt="" />
+        <div className="mb-10 flex gap-4 rounded-[14px] border border-[#088E441A] bg-[#E7F4ED] p-6 lg:p-8">
+          <div className="bg-white w-8 h-8 rounded-full flex items-center justify-center shrink-0">
+            <img src="/check.svg" className="h-4 w-4" alt="" />
           </div>
-          <div>
-            <p className="text-sm text-[#10181FB2] md:text-base">
-              You're not alone — we'll build a plan that fits your lifestyle, preferences, and long-term goals.
-            </p>
-          </div>
+          <p className="text-base text-[#10181FB2] leading-relaxed">
+            You&apos;re not alone — we&apos;ll build a plan that fits your lifestyle, preferences, and long-term goals.
+          </p>
         </div>
-<div className=" text-center">
-        <Button
-          className="rounded-full px-14 pt-2 pb-3.5 text-xl font-normal md:pb-4 md:text-2xl"
-          onClick={() => navigate('/email-form')}
-        >
-          Continue
-        </Button>
-</div>
-       <div className="mt-auto flex items-center justify-center pt-8 pb-6 text-xs font-bold text-[#1a1a1b]/60 md:pt-8 md:pb-10">
-          <div className="center h-2 w-2 rounded-full bg-[#088E44]" />
-          <span className="text-xs font-normal text-[#10181FCC]">
+
+        <div className="text-center">
+          <button
+            className="cursor-pointer w-full max-w-xs h-16 rounded-full bg-gradient-to-r from-[#D90655] to-[#FC3F39] text-white text-xl font-bold shadow-xl transition-transform hover:scale-[1.02] active:scale-[0.98]"
+            onClick={() => navigate(`/quiz?index=${fromIndex + 1}`)}
+          >
+            Continue
+          </button>
+        </div>
+
+        <div className="mt-8 flex items-center justify-center space-x-2 text-xs font-bold text-[#1a1a1b]/60">
+          <div className="h-2 w-2 rounded-full bg-[#088E44]" />
+          <span className="text-sm font-normal text-[#10181FCC]">
             856 people are taking this quiz right now
           </span>
         </div>

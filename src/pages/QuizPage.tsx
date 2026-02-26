@@ -21,7 +21,6 @@ interface Question {
 export default function QuizPage() {
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
-    const gender = searchParams.get('gender') || 'both';
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
     const constructSrcDoc = (html: string, css?: string, js?: string) => {
@@ -31,7 +30,21 @@ export default function QuizPage() {
     };
 
     const [questions, setQuestions] = useState<Question[]>([]);
-    const [currentIndex, setCurrentIndex] = useState(0);
+    const [currentIndex, setCurrentIndex] = useState(() => {
+        const index = searchParams.get('index');
+        return index ? parseInt(index) : 0;
+    });
+
+    useEffect(() => {
+        const index = searchParams.get('index');
+        if (index !== null) {
+            const parsed = parseInt(index);
+            if (!isNaN(parsed) && parsed !== currentIndex) {
+                setCurrentIndex(parsed);
+            }
+        }
+    }, [searchParams]);
+
     const [loading, setLoading] = useState(true);
     const [responses, setResponses] = useState<any[]>([]);
     const [selectedOptions, setSelectedOptions] = useState<number[]>([]);
@@ -44,86 +57,78 @@ export default function QuizPage() {
     const [weightUnit, setWeightUnit] = useState<'lbs' | 'kg'>('lbs');
     const [weightValue, setWeightValue] = useState<number>(180);
 
-    const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api/v1';
+    const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+    const gender = searchParams.get('gender') || sessionStorage.getItem('quizGender') || 'female';
 
     // Load saved responses from session storage on mount
     useEffect(() => {
         const savedResponses = sessionStorage.getItem('quizResponses');
         if (savedResponses) {
             try {
-                setResponses(JSON.parse(savedResponses));
+                const parsed = JSON.parse(savedResponses);
+                setResponses(parsed);
+
+                // Restore answers for current question
+                if (questions.length > 0 && currentIndex < parsed.length) {
+                    const existing = parsed[currentIndex];
+                    if (existing) {
+                        const currentQuestion = questions[currentIndex];
+                        if (currentQuestion.type === 'multi-select') {
+                            const indices = currentQuestion.options
+                                .map((opt, idx) => existing.answer.includes(opt.text) ? idx : -1)
+                                .filter(idx => idx !== -1);
+                            setSelectedOptions(indices);
+                        } else if (currentQuestion.type === 'text-input' || currentQuestion.type === 'number-input') {
+                            setInputValue(existing.answer);
+
+                            // Sync specific inputs for height/weight
+                            if (currentQuestion.questionText.toLowerCase().includes('height')) {
+                                const ftMatch = existing.answer.match(/(\d+)'/);
+                                const inMatch = existing.answer.match(/(\d+)"/);
+                                if (ftMatch) setFeet(ftMatch[1]);
+                                if (inMatch) setInches(inMatch[1]);
+                            }
+                            if (currentQuestion.questionText.toLowerCase().includes('weight')) {
+                                const valMatch = existing.answer.match(/(\d+)/);
+                                if (valMatch) setWeightValue(parseInt(valMatch[1]));
+                                if (existing.answer.toLowerCase().includes('kg')) setWeightUnit('kg');
+                                else setWeightUnit('lbs');
+                            }
+                        } else if (currentQuestion.type === 'single-select') {
+                            const index = currentQuestion.options.findIndex(opt => opt.text === existing.answer);
+                            setSelectedOptions(index !== -1 ? [index] : []);
+                        }
+                    } else {
+                        // No previous response for this index, clear for new question
+                        setSelectedOptions([]);
+                        setInputValue('');
+                    }
+                } else if (questions.length > 0) {
+                    // Initialize default values for new question
+                    setSelectedOptions([]);
+                    setInputValue('');
+
+                    const currentQuestion = questions[currentIndex];
+                    if (currentQuestion.type === 'text-input' || currentQuestion.type === 'number-input') {
+                        if (currentQuestion.questionText.toLowerCase().includes('height')) {
+                            setFeet('5');
+                            setInches('6');
+                            setInputValue(`5' 6"`);
+                        }
+                        if (currentQuestion.questionText.toLowerCase().includes('weight')) {
+                            const isGoal = currentQuestion.questionText.toLowerCase().includes('goal');
+                            const defaultVal = isGoal ? 150 : 180;
+                            setWeightValue(defaultVal);
+                            setWeightUnit('lbs');
+                            setInputValue(`${defaultVal} lbs`);
+                        }
+                    }
+                }
             } catch (e) {
                 console.error('Error parsing saved responses', e);
             }
         }
-    }, []);
-
-    // Restore selected options and input value when navigating between questions
-    useEffect(() => {
-        if (questions.length > 0 && questions[currentIndex]) {
-            const currentQuestion = questions[currentIndex];
-            const currentResponse = responses[currentIndex];
-
-            if (currentResponse) {
-                if (currentQuestion.type === 'text-input' || currentQuestion.type === 'number-input') {
-                    setInputValue(currentResponse.answer || '');
-                    setSelectedOptions([]);
-
-                    if (currentQuestion.questionText.toLowerCase().includes('height')) {
-                        const val = currentResponse.answer || '';
-                        const ftMatch = val.match(/(\d+)'/);
-                        const inMatch = val.match(/(\d+)"/);
-                        if (ftMatch) setFeet(ftMatch[1]);
-                        if (inMatch) setInches(inMatch[1]);
-                    }
-
-                    if (currentQuestion.questionText.toLowerCase().includes('weight')) {
-                        const val = currentResponse.answer || '';
-                        const weightMatch = val.match(/(\d+)/);
-                        if (weightMatch) {
-                            setWeightValue(parseInt(weightMatch[1]));
-                            if (val.toLowerCase().includes('kg')) setWeightUnit('kg');
-                            else setWeightUnit('lbs');
-                        }
-                    }
-                } else if (currentQuestion.type === 'multi-select') {
-                    const answers = Array.isArray(currentResponse.answer) ? currentResponse.answer : [];
-                    const indices = currentQuestion.options
-                        .map((opt, idx) => (answers.includes(opt.text) ? idx : -1))
-                        .filter(idx => idx !== -1);
-                    setSelectedOptions(indices);
-                    setInputValue('');
-                } else if (currentQuestion.type === 'single-select') {
-                    const answer = currentResponse.answer;
-                    const index = currentQuestion.options.findIndex(opt => opt.text === answer);
-                    setSelectedOptions(index !== -1 ? [index] : []);
-                    setInputValue('');
-                } else {
-                    setSelectedOptions([]);
-                    setInputValue('');
-                }
-            } else {
-                // No previous response, clear for new question
-                setSelectedOptions([]);
-                setInputValue('');
-
-                if (currentQuestion.type === 'text-input' || currentQuestion.type === 'number-input') {
-                    if (currentQuestion.questionText.toLowerCase().includes('height')) {
-                        setFeet('5');
-                        setInches('6');
-                        setInputValue(`5' 6"`);
-                    }
-                    if (currentQuestion.questionText.toLowerCase().includes('weight')) {
-                        const isGoal = currentQuestion.questionText.toLowerCase().includes('goal');
-                        const defaultVal = isGoal ? 150 : 180;
-                        setWeightValue(defaultVal);
-                        setWeightUnit('lbs');
-                        setInputValue(`${defaultVal} lbs`);
-                    }
-                }
-            }
-        }
-    }, [currentIndex, questions, responses]);
+    }, [currentIndex, questions]);
 
     useEffect(() => {
         const fetchQuestions = async () => {
@@ -161,24 +166,32 @@ export default function QuizPage() {
             answer = inputValue;
         } else {
             // single-select handled in handleOptionSelect
-            return;
+            // return; // Removed as saveResponse is now called in handleOptionSelect
         }
 
         saveResponse(answer);
     };
 
-    const handleOptionSelect = (optionIndex: number) => {
+    const handleBack = () => {
+        if (currentIndex > 0) {
+            setCurrentIndex(currentIndex - 1);
+        } else {
+            navigate('/');
+        }
+    };
+
+    const handleOptionSelect = (index: number) => {
         const currentQuestion = questions[currentIndex];
 
         if (currentQuestion.type === 'multi-select') {
-            if (selectedOptions.includes(optionIndex)) {
-                setSelectedOptions(selectedOptions.filter(i => i !== optionIndex));
-            } else {
-                setSelectedOptions([...selectedOptions, optionIndex]);
-            }
+            const newSelected = selectedOptions.includes(index)
+                ? selectedOptions.filter(i => i !== index)
+                : [...selectedOptions, index];
+            setSelectedOptions(newSelected);
         } else {
-            setSelectedOptions([optionIndex]);
-            saveResponse(currentQuestion.options[optionIndex].text);
+            setSelectedOptions([index]);
+            const answer = currentQuestion.options[index].text;
+            saveResponse(answer);
         }
     };
 
@@ -186,6 +199,7 @@ export default function QuizPage() {
         const currentQuestion = questions[currentIndex];
         const newResponse = {
             questionId: currentQuestion._id,
+            questionText: currentQuestion.questionText,
             answer: answer
         };
 
@@ -203,6 +217,20 @@ export default function QuizPage() {
     };
 
     const moveToNext = () => {
+        const currentQuestion = questions[currentIndex];
+
+        // If we just finished "How familiar are you with the Mediterranean Diet?", go to BreakPage1
+        if (currentQuestion?.questionText.toLowerCase().includes('familiar are you with the mediterranean diet')) {
+            navigate(`/break-1?fromIndex=${currentIndex}`);
+            return;
+        }
+
+        // If we just finished "Goal weight", go to BreakPage2
+        if (currentQuestion?.questionText.toLowerCase().includes('goal weight')) {
+            navigate(`/break-2?fromIndex=${currentIndex}`);
+            return;
+        }
+
         if (currentIndex < questions.length - 1) {
             setCurrentIndex(currentIndex + 1);
             setSelectedOptions([]);
@@ -555,10 +583,10 @@ export default function QuizPage() {
                                 <button
                                     key={index}
                                     onClick={() => handleOptionSelect(index)}
-                                    className={`cursor-pointer w-full px-6 py-5 md:text-lg rounded-xl border transition-all flex items-center justify-center  leading-tight 
+                                    className={`cursor-pointer w-full px-6 py-5 md:text-lg rounded-xl border transition-all flex items-center justify-center leading-tight hover:shadow-md active:scale-[0.98] 
                                         ${selectedOptions.includes(index)
                                             ? 'bg-gradient-to-r from-[#D90655] to-[#FC3F39] border-transparent text-white scale-[1.02]'
-                                            : 'bg-[#f4f4f5] border-[#f4f4f5] text-[#1a1a1b] !border-[#10181F1A] border-solid'
+                                            : 'bg-[#f4f4f5] border-[#f4f4f5] text-[#1a1a1b] !border-[#10181F1A] border-solid hover:bg-gray-100'
                                         }`}
                                 >
                                     <span>{option.text}</span>
