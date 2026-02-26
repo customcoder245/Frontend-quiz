@@ -37,6 +37,13 @@ export default function QuizPage() {
     const [selectedOptions, setSelectedOptions] = useState<number[]>([]);
     const [inputValue, setInputValue] = useState('');
 
+    const [feet, setFeet] = useState<string>('5');
+    const [inches, setInches] = useState<string>('6');
+    const [openDropdown, setOpenDropdown] = useState<'feet' | 'inches' | null>(null);
+
+    const [weightUnit, setWeightUnit] = useState<'lbs' | 'kg'>('lbs');
+    const [weightValue, setWeightValue] = useState<number>(180);
+
     const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api/v1';
 
     // Load saved responses from session storage on mount
@@ -61,6 +68,24 @@ export default function QuizPage() {
                 if (currentQuestion.type === 'text-input' || currentQuestion.type === 'number-input') {
                     setInputValue(currentResponse.answer || '');
                     setSelectedOptions([]);
+
+                    if (currentQuestion.questionText.toLowerCase().includes('height')) {
+                        const val = currentResponse.answer || '';
+                        const ftMatch = val.match(/(\d+)'/);
+                        const inMatch = val.match(/(\d+)"/);
+                        if (ftMatch) setFeet(ftMatch[1]);
+                        if (inMatch) setInches(inMatch[1]);
+                    }
+
+                    if (currentQuestion.questionText.toLowerCase().includes('weight')) {
+                        const val = currentResponse.answer || '';
+                        const weightMatch = val.match(/(\d+)/);
+                        if (weightMatch) {
+                            setWeightValue(parseInt(weightMatch[1]));
+                            if (val.toLowerCase().includes('kg')) setWeightUnit('kg');
+                            else setWeightUnit('lbs');
+                        }
+                    }
                 } else if (currentQuestion.type === 'multi-select') {
                     const answers = Array.isArray(currentResponse.answer) ? currentResponse.answer : [];
                     const indices = currentQuestion.options
@@ -81,6 +106,21 @@ export default function QuizPage() {
                 // No previous response, clear for new question
                 setSelectedOptions([]);
                 setInputValue('');
+
+                if (currentQuestion.type === 'text-input' || currentQuestion.type === 'number-input') {
+                    if (currentQuestion.questionText.toLowerCase().includes('height')) {
+                        setFeet('5');
+                        setInches('6');
+                        setInputValue(`5' 6"`);
+                    }
+                    if (currentQuestion.questionText.toLowerCase().includes('weight')) {
+                        const isGoal = currentQuestion.questionText.toLowerCase().includes('goal');
+                        const defaultVal = isGoal ? 150 : 180;
+                        setWeightValue(defaultVal);
+                        setWeightUnit('lbs');
+                        setInputValue(`${defaultVal} lbs`);
+                    }
+                }
             }
         }
     }, [currentIndex, questions, responses]);
@@ -167,6 +207,7 @@ export default function QuizPage() {
             setCurrentIndex(currentIndex + 1);
             setSelectedOptions([]);
             setInputValue('');
+            setOpenDropdown(null);
         } else {
             navigate('/email-form');
         }
@@ -334,20 +375,179 @@ export default function QuizPage() {
                         </div>
                     ) : currentQuestion.type === 'text-input' || currentQuestion.type === 'number-input' ? (
                         <div className="space-y-6">
-                            <input
-                                type={currentQuestion.type === 'number-input' ? 'number' : 'text'}
-                                className="w-full rounded-xl border leading-[1.7em] border-[#10181F1A] py-4 px-8 text-2xl font-normal focus:bg-white focus:border-[#10181F1A] transition-all text-center"
-                                value={inputValue}
-                                onChange={(e) => setInputValue(e.target.value)}
-                                placeholder="Enter value..."
-                            />
-                            <button
-                                onClick={handleNext}
-                                disabled={!inputValue}
-                                className="cursor-pointer w-full h-16 rounded-full bg-gradient-to-r from-[#D90655] to-[#FC3F39] text-white text-xl font-black shadow-xl disabled:opacity-50"
-                            >
-                                Continue
-                            </button>
+                            {currentQuestion.questionText.toLowerCase().includes('height') ? (
+                                <div className="flex flex-col items-center">
+                                    <div className="flex gap-4">
+                                        {/* Backdrop for closing dropdown */}
+                                        {openDropdown && (
+                                            <div
+                                                className="fixed inset-0 z-10"
+                                                onClick={() => setOpenDropdown(null)}
+                                            />
+                                        )}
+                                        {/* Feet Dropdown */}
+                                        <div className="flex flex-col items-center gap-3">
+                                            <span className="text-[#10181FB2] text-sm">Feet</span>
+                                            <div className="relative z-20">
+                                                <button
+                                                    onClick={() => setOpenDropdown(openDropdown === 'feet' ? null : 'feet')}
+                                                    className={`cursor-pointer w-[120px] h-[72px] bg-white border ${openDropdown === 'feet' ? 'border-[#FC3F39]' : 'border-[#10181F26]'} rounded-xl text-2xl font-normal flex items-center justify-center transition-colors`}
+                                                >
+                                                    {feet}&apos;
+                                                </button>
+                                                {openDropdown === 'feet' && (
+                                                    <div className="absolute top-[calc(100%-1px)] left-0 w-[120px] bg-white border border-[#10181F26] shadow-xl text-center flex flex-col pt-1">
+                                                        {['4', '5', '6', '7'].map(f => (
+                                                            <div
+                                                                key={f}
+                                                                onClick={() => { setFeet(f); setInputValue(`${f}' ${inches}"`); setOpenDropdown(null); }}
+                                                                className={`cursor-pointer py-3 text-xl ${feet === f ? 'bg-[#2563EB] text-white' : 'text-[#10181F] hover:bg-gray-50'}`}
+                                                            >
+                                                                {f}&apos;
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        {/* Inches Dropdown */}
+                                        <div className="flex flex-col items-center gap-3">
+                                            <span className="text-[#10181FB2] text-sm">Inches</span>
+                                            <div className="relative z-20">
+                                                <button
+                                                    onClick={() => setOpenDropdown(openDropdown === 'inches' ? null : 'inches')}
+                                                    className={`cursor-pointer w-[120px] h-[72px] bg-white border ${openDropdown === 'inches' ? 'border-[#FC3F39]' : 'border-[#10181F26]'} rounded-xl text-2xl font-normal flex items-center justify-center transition-colors`}
+                                                >
+                                                    {inches}&quot;
+                                                </button>
+                                                {openDropdown === 'inches' && (
+                                                    <div className="absolute top-[calc(100%-1px)] left-0 w-[120px] bg-white border border-[#10181F26] shadow-xl text-center flex flex-col h-[280px] overflow-y-auto pt-1 custom-scrollbar">
+                                                        {Array.from({ length: 12 }, (_, i) => i.toString()).map(i => (
+                                                            <div
+                                                                key={i}
+                                                                onClick={() => { setInches(i); setInputValue(`${feet}' ${i}"`); setOpenDropdown(null); }}
+                                                                className={`cursor-pointer py-3 text-xl ${inches === i ? 'bg-[#2563EB] text-white' : 'text-[#10181F] hover:bg-gray-50'}`}
+                                                            >
+                                                                {i}&quot;
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="mt-8 mb-6 text-[#10181FB2] text-base">
+                                        = {Math.round(parseInt(feet || '0') * 30.48 + parseInt(inches || '0') * 2.54)} cm
+                                    </div>
+
+                                    <button
+                                        onClick={handleNext}
+                                        disabled={!inputValue}
+                                        className="cursor-pointer w-full h-16 rounded-full bg-gradient-to-r from-[#D90655] to-[#FC3F39] text-white text-xl font-black shadow-xl disabled:opacity-50"
+                                    >
+                                        Continue
+                                    </button>
+                                </div>
+                            ) : currentQuestion.questionText.toLowerCase().includes('weight') ? (
+                                <div className="flex flex-col items-center w-full max-w-md mx-auto">
+                                    {/* Unit Toggle */}
+                                    <div className="flex bg-[#f4f4f5] p-1 rounded-full mb-10 w-32">
+                                        <button
+                                            onClick={() => {
+                                                if (weightUnit === 'lbs') return;
+                                                // Snap to boundaries for cleaner toggle
+                                                const newVal = weightValue >= 181 ? 400 : (weightValue <= 36 ? 80 : Math.round(weightValue * 2.20462));
+                                                setWeightUnit('lbs');
+                                                setWeightValue(newVal);
+                                                setInputValue(`${newVal} lbs`);
+                                            }}
+                                            className={`flex-1 py-2 rounded-full text-sm font-semibold transition-all ${weightUnit === 'lbs' ? 'bg-[#FC3F39] text-white shadow-md' : 'text-[#10181FB2]'}`}
+                                        >
+                                            lbs
+                                        </button>
+                                        <button
+                                            onClick={() => {
+                                                if (weightUnit === 'kg') return;
+                                                // Snap to boundaries for cleaner toggle
+                                                const newVal = weightValue >= 400 ? 181 : (weightValue <= 80 ? 36 : Math.round(weightValue / 2.20462));
+                                                setWeightUnit('kg');
+                                                setWeightValue(newVal);
+                                                setInputValue(`${newVal} kg`);
+                                            }}
+                                            className={`flex-1 py-2 rounded-full text-sm font-semibold transition-all ${weightUnit === 'kg' ? 'bg-[#FC3F39] text-white shadow-md' : 'text-[#10181FB2]'}`}
+                                        >
+                                            kg
+                                        </button>
+                                    </div>
+
+                                    {/* Weight Display */}
+                                    <div className="mb-8 flex items-baseline gap-2">
+                                        <span className="text-6xl md:text-7xl font-bold text-[#FC3F39] baikal-trial">
+                                            {weightValue}
+                                        </span>
+                                        <span className="text-2xl font-normal text-[#10181FB2]">
+                                            {weightUnit}
+                                        </span>
+                                    </div>
+
+                                    {/* Slider */}
+                                    <div className="w-full mb-12">
+                                        <div className="relative h-2 w-full bg-[#f4f4f5] rounded-full shadow-[inset_1px_1px_4px_0px_#0000001A]">
+                                            <input
+                                                type="range"
+                                                min={weightUnit === 'lbs' ? 80 : 36}
+                                                max={weightUnit === 'lbs' ? 400 : 181}
+                                                step="1"
+                                                value={weightValue}
+                                                onChange={(e) => {
+                                                    const val = parseInt(e.target.value);
+                                                    setWeightValue(val);
+                                                    setInputValue(`${val} ${weightUnit}`);
+                                                }}
+                                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20"
+                                            />
+                                            <div
+                                                className="absolute inset-y-0 left-0 bg-gradient-to-r from-[#D90655] to-[#FC3F39] rounded-full"
+                                                style={{ width: `${((weightValue - (weightUnit === 'lbs' ? 80 : 36)) / ((weightUnit === 'lbs' ? 400 : 181) - (weightUnit === 'lbs' ? 80 : 36))) * 100}%` }}
+                                            />
+                                            <div
+                                                className="absolute top-1/2 -translate-y-1/2 w-6 h-6 bg-[#FC3F39] border-4 border-white rounded-full shadow-lg pointer-events-none z-10"
+                                                style={{ left: `calc(${((weightValue - (weightUnit === 'lbs' ? 80 : 36)) / ((weightUnit === 'lbs' ? 400 : 181) - (weightUnit === 'lbs' ? 80 : 36))) * 100}% - 12px)` }}
+                                            />
+                                        </div>
+                                        <div className="flex justify-between mt-4 text-sm text-[#10181FB2]">
+                                            <span>{weightUnit === 'lbs' ? '80 lbs' : '36 kg'}</span>
+                                            <span>{weightUnit === 'lbs' ? '400 lbs' : '181 kg'}</span>
+                                        </div>
+                                    </div>
+
+                                    <button
+                                        onClick={handleNext}
+                                        className="cursor-pointer w-full h-16 rounded-full bg-gradient-to-r from-[#D90655] to-[#FC3F39] text-white text-xl font-black shadow-xl"
+                                    >
+                                        Continue
+                                    </button>
+                                </div>
+                            ) : (
+                                <>
+                                    <input
+                                        type={currentQuestion.type === 'number-input' ? 'number' : 'text'}
+                                        className="w-full rounded-xl border leading-[1.7em] border-[#10181F1A] py-4 px-8 text-2xl font-normal focus:bg-white focus:border-[#10181F1A] transition-all text-center"
+                                        value={inputValue}
+                                        onChange={(e) => setInputValue(e.target.value)}
+                                        placeholder="Enter value..."
+                                    />
+                                    <button
+                                        onClick={handleNext}
+                                        disabled={!inputValue}
+                                        className="cursor-pointer w-full h-16 rounded-full bg-gradient-to-r from-[#D90655] to-[#FC3F39] text-white text-xl font-black shadow-xl disabled:opacity-50"
+                                    >
+                                        Continue
+                                    </button>
+                                </>
+                            )}
                         </div>
                     ) : (
                         <>
