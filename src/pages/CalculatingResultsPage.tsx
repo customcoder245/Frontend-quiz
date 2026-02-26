@@ -7,23 +7,64 @@ export default function CalculatingResultsPage() {
   const navigate = useNavigate();
   const [progress, setProgress] = useState(0);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [activePopup, setActivePopup] = useState<number | null>(null);
+  const [popupsShown, setPopupsShown] = useState<boolean[]>([]);
+  const [popupQuestions, setPopupQuestions] = useState<any[]>([]);
+
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api/v1';
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      setProgress((oldProgress) => {
-        if (oldProgress === 100) {
-          clearInterval(timer);
-          return 100;
+    const fetchQuestions = async () => {
+      try {
+        const gender = sessionStorage.getItem('quizGender') || 'both';
+        const response = await fetch(`${API_BASE_URL}/questions?gender=${gender}&isPopup=true`);
+        const data = await response.json();
+
+        if (data.questions && data.questions.length > 0) {
+          const numQuestions = data.questions.length;
+          const questions = data.questions.map((q: any, i: number) => ({
+            text: q.questionText,
+            options: q.options.map((opt: any) => opt.text),
+            triggerAt: ((i + 1) / (numQuestions + 1)) * 100
+          }));
+          setPopupQuestions(questions);
+          setPopupsShown(new Array(questions.length).fill(false));
         }
-        const diff = Math.random() * 10;
-        return Math.min(oldProgress + diff, 100);
+      } catch (err) {
+        console.error('Error fetching popup questions:', err);
+      }
+    };
+    fetchQuestions();
+  }, [API_BASE_URL]);
+
+  useEffect(() => {
+    if (activePopup !== null) return;
+    if (progress >= 100) return;
+
+    const timer = setTimeout(() => {
+      setProgress((oldProgress) => {
+        let nextProgress = Math.min(oldProgress + Math.random() * 10, 100);
+
+        for (let i = 0; i < popupQuestions.length; i++) {
+          if (oldProgress < popupQuestions[i].triggerAt && nextProgress >= popupQuestions[i].triggerAt && !popupsShown[i]) {
+            nextProgress = popupQuestions[i].triggerAt;
+            setActivePopup(i);
+            setPopupsShown((prev) => {
+              const newShown = [...prev];
+              newShown[i] = true;
+              return newShown;
+            });
+            break;
+          }
+        }
+        return nextProgress;
       });
     }, 200);
 
-    return () => clearInterval(timer);
-  }, []);
+    return () => clearTimeout(timer);
+  }, [progress, activePopup, popupsShown]);
 
-const size = 250; // Base coordinate size
+  const size = 250; // Base coordinate size
   const strokeWidth = 24;
   const center = size / 2;
   const radius = center - strokeWidth; // Creates the padding for the stroke
@@ -121,6 +162,27 @@ const size = 250; // Base coordinate size
       </div>
 
       <main className="mx-auto w-full max-w-xl px-6 pt-8">
+        {/* Modal Popup */}
+        {activePopup !== null && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-6 animate-in fade-in duration-300">
+            <div className="bg-white rounded-3xl md:p-10 p-6 w-full max-w-lg shadow-2xl transform transition-all animate-in zoom-in-95 duration-300">
+              <h3 className="text-[24px] md:text-[28px] font-semibold mb-8 text-[#10181F] text-center baikal-trial leading-tight">
+                {popupQuestions[activePopup].text}
+              </h3>
+              <div className="space-y-4">
+                {popupQuestions[activePopup].options.map((option, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => setActivePopup(null)}
+                    className="cursor-pointer w-full px-6 py-4 md:text-lg rounded-xl transition-all flex items-center justify-center leading-tight bg-white border text-[#1a1a1b] border-[#10181F1A] hover:bg-gradient-to-r hover:from-[#D90655] hover:to-[#FC3F39] hover:text-white hover:border-transparent hover:scale-[1.02] active:scale-95 shadow-sm"
+                  >
+                    <span className="text-center font-normal">{option}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
         <h2 className="baikal-trial text-center text-[28px] leading-[1.2em] font-semibold text-[#10181F] md:text-[32px]">
           Calculating results
         </h2>
@@ -162,50 +224,50 @@ const size = 250; // Base coordinate size
           </div>
         </div> */}
 
-<div className="mt-8 mb-6 relative w-full max-w-[200px] md:max-w-[256px] aspect-square mx-auto">
-      <svg
-        viewBox={`0 0 ${size} ${size}`}
-        className="h-full w-full -rotate-90 transform"
-      >
-        <defs>
-          <linearGradient id="progress-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#D90655" />
-            <stop offset="100%" stopColor="#FC3F39" />
-          </linearGradient>
-        </defs>
+        <div className="mt-8 mb-6 relative w-full max-w-[200px] md:max-w-[256px] aspect-square mx-auto">
+          <svg
+            viewBox={`0 0 ${size} ${size}`}
+            className="h-full w-full -rotate-90 transform"
+          >
+            <defs>
+              <linearGradient id="progress-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#D90655" />
+                <stop offset="100%" stopColor="#FC3F39" />
+              </linearGradient>
+            </defs>
 
-        {/* Gray Background Circle */}
-        <circle
-          cx={center}
-          cy={center}
-          r={radius}
-          stroke="#F4F4F5"
-          strokeWidth={strokeWidth}
-          fill="none"
-        />
+            {/* Gray Background Circle */}
+            <circle
+              cx={center}
+              cy={center}
+              r={radius}
+              stroke="#F4F4F5"
+              strokeWidth={strokeWidth}
+              fill="none"
+            />
 
-        {/* Progress Circle (Gradient) */}
-        <circle
-          cx={center}
-          cy={center}
-          r={radius}
-          stroke="url(#progress-gradient)"
-          strokeWidth={strokeWidth}
-          fill="none"
-          strokeDasharray={circumference}
-          strokeDashoffset={offset}
-          strokeLinecap="round"
-          className="transition-all duration-500 ease-out"
-        />
-      </svg>
+            {/* Progress Circle (Gradient) */}
+            <circle
+              cx={center}
+              cy={center}
+              r={radius}
+              stroke="url(#progress-gradient)"
+              strokeWidth={strokeWidth}
+              fill="none"
+              strokeDasharray={circumference}
+              strokeDashoffset={offset}
+              strokeLinecap="round"
+              className="transition-all duration-500 ease-out"
+            />
+          </svg>
 
-      {/* Centered Percentage Text */}
-      <div className="absolute inset-0 flex items-center justify-center">
-        <span className="font-normal text-[#18181B] font-semibold text-[24px] md:text-[32px] ">
-          {Math.round(progress)}%
-        </span>
-      </div>
-    </div>
+          {/* Centered Percentage Text */}
+          <div className="absolute inset-0 flex items-center justify-center">
+            <span className="font-normal text-[#18181B] font-semibold text-[24px] md:text-[32px] ">
+              {Math.round(progress)}%
+            </span>
+          </div>
+        </div>
 
         {/* Info Box */}
         <div className="flex gap-4 rounded-[14px] border border-[#088E441A] bg-[#088E441A] p-6 text-base font-normal md:p-8">

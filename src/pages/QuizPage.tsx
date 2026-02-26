@@ -88,7 +88,7 @@ export default function QuizPage() {
     useEffect(() => {
         const fetchQuestions = async () => {
             try {
-                const response = await fetch(`${API_BASE_URL}/questions?gender=${gender}`);
+                const response = await fetch(`${API_BASE_URL}/questions?gender=${gender}&isPopup=false`);
                 const data = await response.json();
                 if (data.questions) {
                     setQuestions(data.questions);
