@@ -111,7 +111,7 @@ export default function BreakPage2() {
   const progress = ((fromIndex + 1) / totalQuestions) * 100;
 
   return (
-    <div className="flex flex-col bg-white pt-5 font-sans xl:h-screen overflow-hidden">
+    <div className="xl:h-screen bg-white font-sans flex flex-col pt-5">
       {/* Header */}
       <header className="bg-opacity-30 mx-auto flex w-full max-w-[1360px] items-center justify-between bg-white px-6 py-3.5 backdrop-blur-[40px] backdrop-blur-lg md:px-8">
         <div
@@ -227,7 +227,7 @@ export default function BreakPage2() {
       </div>
 
       {/* Content Area */}
-      <main className="mx-auto w-full max-w-xl px-6 pt-4 pb-10 overflow-y-auto no-scrollbar">
+      <main className="mx-auto w-full max-w-xl px-6 pt-4 pb-10 ">
         <div className="mb-8 space-y-3 text-center">
           <p className="mb-4 text-base font-normal text-[#10181FB2] capitalize">
             Your health snapshot
@@ -246,11 +246,11 @@ export default function BreakPage2() {
             </span>
           </div>
 
-          <div className="grid items-center gap-8 md:grid-cols-2">
+          <div className="grid items-center gap-6 md:grid-cols-2">
             {/* BMI Gauge SVG */}
-            <div className="relative flex flex-col items-center justify-center">
+            <div className="relative flex flex-col ">
               <div className="relative w-full aspect-[2/1]">
-                <svg viewBox="0 0 200 100" className="w-full">
+                <svg viewBox="0 0 200 100" className="w-full pb-4">
                   <defs>
                     <linearGradient id="gaugeGradient" x1="0%" y1="0%" x2="100%" y2="0%">
                       <stop offset="0%" stopColor="#67B1B1" />
@@ -278,16 +278,16 @@ export default function BreakPage2() {
 
                 {/* Needle Placeholder (Indicator) */}
                 <div
-                  className="absolute bottom-[-2px] left-1/2 w-4 h-[75%] origin-bottom transition-transform duration-1000"
-                  style={{ transform: `translateX(-50%) rotate(${getGaugeRotation()}deg)` }}
+                // absolute bottom-[-2px] left-1/2 w-4 h-[88%] origin-bottom transition-transform duration-1000
+                  className=""
                 >
-                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-7 h-7 bg-white rounded-full shadow-md border-2 border-white" />
+                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-7 h-7 bg-white rounded-full shadow-[-2px_-2px_4px_0px_#0000001A] border-2 border-white" />
                 </div>
 
                 <div className="absolute inset-0 flex items-end justify-center pb-0">
                   <div className="text-center">
-                    <p className="text-5xl font-bold text-[#10181F] mb-0.5">{profile.bmi}</p>
-                    <p className="text-sm font-semibold tracking-widest text-[#10181FB2] uppercase leading-none">
+                    <p className="md:text-[40px] text-[32px] font-normal text-[#10181F] mb-2">{profile.bmi}</p>
+                    <p className="text-base font-normal  text-[#10181F] leading-none tracking-[0px]">
                       {profile.category}
                     </p>
                   </div>
@@ -295,7 +295,7 @@ export default function BreakPage2() {
               </div>
               <div className="mt-4 flex items-center space-x-2">
                 <div className="h-2 w-2 rounded-full bg-[#088E44]" />
-                <span className="text-sm font-normal text-[#10181FB2]">
+                <span className="text-sm font-normal text-[#10181FCC]">
                   Ideal = {profile.idealBmi}
                 </span>
               </div>
@@ -350,9 +350,9 @@ export default function BreakPage2() {
 
         {/* Encouragement Box */}
         <div className="mb-10 flex gap-4 rounded-[14px] border border-[#088E441A] bg-[#E7F4ED] p-6 lg:p-8">
-          <div className="bg-white w-8 h-8 rounded-full flex items-center justify-center shrink-0">
+          
             <img src="/check.svg" className="h-4 w-4" alt="" />
-          </div>
+        
           <p className="text-base text-[#10181FB2] leading-relaxed">
             You&apos;re not alone — we&apos;ll build a plan that fits your lifestyle, preferences, and long-term goals.
           </p>
@@ -360,7 +360,7 @@ export default function BreakPage2() {
 
         <div className="text-center">
           <button
-            className="cursor-pointer w-full max-w-xs h-16 rounded-full bg-gradient-to-r from-[#D90655] to-[#FC3F39] text-white text-xl font-bold shadow-xl transition-transform hover:scale-[1.02] active:scale-[0.98]"
+            className="cursor-pointer w-full md:max-w-[214px] max-w-[196px] h-16 rounded-full bg-gradient-to-r from-[#D90655] to-[#FC3F39] text-white text-xl font-bold shadow-xl transition-transform hover:scale-[1.02] active:scale-[0.98]"
             onClick={() => navigate(`/quiz?index=${fromIndex + 1}`)}
           >
             Continue
