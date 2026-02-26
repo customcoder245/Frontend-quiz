@@ -23,6 +23,7 @@ export default function CalculatingResultsPage() {
         if (data.questions && data.questions.length > 0) {
           const numQuestions = data.questions.length;
           const questions = data.questions.map((q: any, i: number) => ({
+            _id: q._id,
             text: q.questionText,
             options: q.options.map((opt: any) => opt.text),
             triggerAt: ((i + 1) / (numQuestions + 1)) * 100
@@ -63,6 +64,24 @@ export default function CalculatingResultsPage() {
 
     return () => clearTimeout(timer);
   }, [progress, activePopup, popupsShown]);
+
+  const handlePopupAnswer = async (questionId: string, answer: string) => {
+    setActivePopup(null);
+    try {
+      const token = localStorage.getItem('token');
+      if (!token || !questionId) return;
+      await fetch(`${API_BASE_URL}/questions/responses/append`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ questionId, answer })
+      });
+    } catch (err) {
+      console.error('Error saving popup answer:', err);
+    }
+  };
 
   const size = 250; // Base coordinate size
   const strokeWidth = 24;
@@ -170,10 +189,10 @@ export default function CalculatingResultsPage() {
                 {popupQuestions[activePopup].text}
               </h3>
               <div className="space-y-4">
-                {popupQuestions[activePopup].options.map((option, idx) => (
+                {popupQuestions[activePopup].options.map((option: string, idx: number) => (
                   <button
                     key={idx}
-                    onClick={() => setActivePopup(null)}
+                    onClick={() => handlePopupAnswer(popupQuestions[activePopup]._id, option)}
                     className="cursor-pointer w-full px-6 py-4 md:text-lg rounded-xl transition-all flex items-center justify-center leading-tight bg-white border text-[#1a1a1b] border-[#10181F1A] hover:bg-gradient-to-r hover:from-[#D90655] hover:to-[#FC3F39] hover:text-white hover:border-transparent hover:scale-[1.02] active:scale-95 shadow-sm"
                   >
                     <span className="text-center font-normal">{option}</span>
