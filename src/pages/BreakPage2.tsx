@@ -17,8 +17,8 @@ export default function BreakPage2() {
     height: 165,
     weight: 82,
     goalWeight: 62,
-    bmi: 30.1,
-    category: 'Overweight',
+    bmi: 15,
+    category: 'Normal',
     idealBmi: 21.5,
     unit: 'kg'
   });
@@ -100,8 +100,8 @@ export default function BreakPage2() {
   }, []);
 
   const getGaugeRotation = () => {
-    const min = 15;
-    const max = 40;
+    const min = 10;
+    const max = 70;
     const clampedBmi = Math.min(Math.max(profile.bmi, min), max);
     const percentage = (clampedBmi - min) / (max - min);
     // 0% is -90deg, 100% is 90deg
@@ -278,10 +278,10 @@ export default function BreakPage2() {
 
                 {/* Needle Placeholder (Indicator) */}
                 <div
-                // absolute bottom-[-2px] left-1/2 w-4 h-[88%] origin-bottom transition-transform duration-1000
-                  className=""
+                  className="absolute bottom-[10%] left-1/2 w-4 h-[80%] origin-bottom transition-transform duration-1000 ease-out z-20"
+                  style={{ transform: `translateX(-50%) rotate(${getGaugeRotation()}deg)` }}
                 >
-                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-7 h-7 bg-white rounded-full shadow-[-2px_-2px_4px_0px_#0000001A] border-2 border-white" />
+                  <div className="absolute top-[-16px] left-1/2 -translate-x-1/2 w-8 h-8 bg-white rounded-full shadow-[-2px_-2px_4px_0px_#0000001A] border-2 border-white" />
                 </div>
 
                 <div className="absolute inset-0 flex items-end justify-center pb-0">
@@ -339,7 +339,7 @@ export default function BreakPage2() {
         <div className="flex gap-4 rounded-[14px] border border-[#FCB6401A] bg-[#FEF7EB] p-6 mb-6">
           <img src="/unhealthy.svg" className="h-6 w-6 mt-1" alt="" />
           <div>
-            <h3 className="mb-2 text-xl font-semibold text-[#10181F] leading-tight">
+            <h3 className="mb-2 md:text-xl text-lg font-semibold text-[#10181F] leading-tight">
               Risks of an unhealthy BMI
             </h3>
             <p className="text-base text-[#10181FB2] leading-relaxed">
@@ -350,9 +350,9 @@ export default function BreakPage2() {
 
         {/* Encouragement Box */}
         <div className="mb-10 flex gap-4 rounded-[14px] border border-[#088E441A] bg-[#E7F4ED] p-6 lg:p-8">
-          
-            <img src="/check.svg" className="h-4 w-4" alt="" />
-        
+
+          <img src="/check.svg" className="h-4 w-4" alt="" />
+
           <p className="text-base text-[#10181FB2] leading-relaxed">
             You&apos;re not alone — we&apos;ll build a plan that fits your lifestyle, preferences, and long-term goals.
           </p>
