@@ -51,6 +51,23 @@ export default function ResultSales() {
     };
 
     const weightToLose = profile.weight - profile.goalWeight;
+    const ageValue = parseInt(String(profile.age).replace(/\D/g, '')) || 30;
+
+    // Mifflin-St Jeor Formula for BMR
+    let bmr = (10 * profile.weight) + (6.25 * profile.height) - (5 * ageValue);
+    bmr = profile.gender === 'male' ? bmr + 5 : bmr - 161;
+
+    // Sedentary activity factor (1.2) - Weight loss deficit (usually 500-750)
+    const dailyTargetKcal = Math.round(bmr * 1.2 - 600);
+    const kcalMin = Math.round(dailyTargetKcal - 150);
+    const kcalMax = Math.round(dailyTargetKcal + 100);
+    const proteinMin = Math.round(profile.weight * 1.1); // Dynamic protein based on weight (1.1g/kg)
+
+    // Projected results: 8% to 12% of total weight is a safe 6-week target for these plans
+    const projectedLossKgMin = Math.round(profile.weight * 0.08);
+    const projectedLossKgMax = Math.round(profile.weight * 0.12);
+    const projectedLossLbsMin = Math.round(projectedLossKgMin * 2.20462);
+    const projectedLossLbsMax = Math.round(projectedLossKgMax * 2.20462);
 
     const tabs = ['SCORE', 'BMI', 'HEALTH', 'FOOD', 'METABOLISM'];
 
@@ -194,7 +211,7 @@ export default function ResultSales() {
                                 </div>
                                 <div>
                                     <p className="text-gray-500 text-[12px] font-bold uppercase tracking-wider mb-0.5">Daily energy target</p>
-                                    <p className="text-[#10181F] text-xl font-bold">≈ 1,650 kcal / day</p>
+                                    <p className="text-[#10181F] text-xl font-bold">≈ {dailyTargetKcal.toLocaleString()} kcal / day</p>
                                 </div>
                             </div>
                         </div>
@@ -205,7 +222,7 @@ export default function ResultSales() {
                                 <Zap size={20} className="text-[#10181F] shrink-0" />
                                 <div>
                                     <p className="text-gray-400 text-[10px] font-bold uppercase tracking-wider mb-0.5">Daily calorie range</p>
-                                    <p className="text-[#10181F] text-sm font-black">1,500 – 1,750 kcal</p>
+                                    <p className="text-[#10181F] text-sm font-black">{kcalMin.toLocaleString()} – {kcalMax.toLocaleString()} kcal</p>
                                 </div>
                             </div>
                             <div className="bg-[#F8F9FA] rounded-[16px] p-5 flex items-center gap-4 border border-gray-50">
@@ -214,7 +231,7 @@ export default function ResultSales() {
                                 </div>
                                 <div>
                                     <p className="text-gray-400 text-[10px] font-bold uppercase tracking-wider mb-0.5">Protein minimum</p>
-                                    <p className="text-[#10181F] text-sm font-black">≥ 95 g protein / day</p>
+                                    <p className="text-[#10181F] text-sm font-black">≥ {proteinMin} g protein / day</p>
                                 </div>
                             </div>
                         </div>
@@ -239,7 +256,7 @@ export default function ResultSales() {
                             </div>
                             <div className="flex-1">
                                 <p className="text-gray-500 text-[12px] font-bold uppercase tracking-wider mb-1">Estimated results</p>
-                                <p className="text-[#10181F] text-2xl font-black">12–18 lbs in 6 weeks</p>
+                                <p className="text-[#10181F] text-2xl font-black">{projectedLossLbsMin}–{projectedLossLbsMax} lbs in 6 weeks</p>
                             </div>
                             <div className="text-[#34A853] text-[11px] font-black uppercase text-right leading-tight max-w-[100px]">
                                 =1–2 dress sizes smaller
