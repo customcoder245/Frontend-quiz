@@ -85,6 +85,16 @@ export default function BreakPage2() {
         idealBmi: 21.5,
         unit: 'kg'
       });
+
+      // Save to sessionStorage for final submission
+      sessionStorage.setItem('calculatedBMI', bmi.toString());
+      sessionStorage.setItem('userProfileSnapshot', JSON.stringify({
+        age,
+        weight: Math.round(weightKg),
+        height: Math.round(heightM * 100),
+        goalWeight: Math.round(goalWeightKg),
+        bmi
+      }));
     }
 
     // Try to fetch actual questions length to sync progress bar perfectly

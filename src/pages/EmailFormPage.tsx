@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import { ShieldCheck, CheckCircle2, Lock, Loader2, Menu, X } from 'lucide-react';
+import { Loader2, Menu, X } from 'lucide-react';
 
 export default function EmailFormPage() {
     const navigate = useNavigate();
@@ -23,6 +23,9 @@ export default function EmailFormPage() {
             const quizResponses = JSON.parse(sessionStorage.getItem('quizResponses') || '[]');
             const quizGender = sessionStorage.getItem('quizGender') || 'both';
 
+            const calculatedBMI = sessionStorage.getItem('calculatedBMI');
+            const bmiNumber = calculatedBMI ? parseFloat(calculatedBMI) : undefined;
+
             const response = await fetch(`${API_BASE_URL}/questions/submit`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -30,7 +33,8 @@ export default function EmailFormPage() {
                     email,
                     firstName: name,
                     responses: quizResponses,
-                    gender: quizGender
+                    gender: quizGender,
+                    bmi: bmiNumber
                 })
             });
 
@@ -65,7 +69,7 @@ export default function EmailFormPage() {
 
     return (
         <div className="xl:h-screen bg-white font-sans flex flex-col pt-5">
-           
+
             <header className="bg-opacity-30 mx-auto flex w-full max-w-[1360px] items-center justify-between  bg-white md:px-8 px-6 py-3.5 backdrop-blur-[40px] backdrop-blur-lg">
                 <div className="flex items-center cursor-pointer" onClick={() => navigate('/')}>
                     <img src="/logo.png" alt="The Mediterranean Diet" className="h-8 md:h-10 w-auto object-contain" />
@@ -178,15 +182,15 @@ export default function EmailFormPage() {
                         </p>
                     </div>
                     <div className='text-center mt-6'>
-                    <Button
-                        className="md:max-w-[214px] max-w-[196px] md:text-2xl text-xl font-normal rounded-full px-14 !h-full pt-2 md:pb-4 pb-3.5"
-                        type="submit"
-                        disabled={isLoading}
-                    >
-                        <span>
-                        {isLoading ? <Loader2 className="animate-spin" /> : 'Continue'}
-                        </span>
-                    </Button>
+                        <Button
+                            className="md:max-w-[214px] max-w-[196px] md:text-2xl text-xl font-normal rounded-full px-14 !h-full pt-2 md:pb-4 pb-3.5"
+                            type="submit"
+                            disabled={isLoading}
+                        >
+                            <span>
+                                {isLoading ? <Loader2 className="animate-spin" /> : 'Continue'}
+                            </span>
+                        </Button>
                     </div>
                 </form>
 

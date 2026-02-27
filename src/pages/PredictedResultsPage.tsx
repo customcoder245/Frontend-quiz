@@ -1,15 +1,33 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/Button';
-import { ShieldCheck, CheckCircle2, Star, Menu, X } from 'lucide-react';
+import { Star, Menu, X } from 'lucide-react';
 import WeightChart from '@/components/weightChart';
 
 export default function PredictedResultsPage() {
   const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
+  const [profile] = useState(() => {
+    const saved = sessionStorage.getItem('userProfileSnapshot');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        return {
+          weight: parsed.weight || 82,
+          goalWeight: parsed.goalWeight || 62
+        };
+      } catch (e) {
+        console.error("Error parsing userProfileSnapshot", e);
+      }
+    }
+    return { weight: 82, goalWeight: 62 };
+  });
+
   return (
     <div className="flex flex-col bg-white pt-5 font-sans xl:h-screen">
+
+
       {/* Header */}
       <header className="bg-opacity-30 mx-auto flex w-full max-w-[1360px] items-center justify-between bg-white px-6 py-3.5 backdrop-blur-[40px] backdrop-blur-lg md:px-8">
         <div
@@ -38,7 +56,6 @@ export default function PredictedResultsPage() {
           </div>
         </div>
 
-        {/* Mobile Menu Toggle */}
         <button
           className="rounded-full p-2 text-[#1a1a1b] transition-colors hover:bg-black/5 sm:hidden"
           onClick={() => setIsMobileMenuOpen(true)}
@@ -51,13 +68,10 @@ export default function PredictedResultsPage() {
       <div
         className={`fixed inset-0 z-50 flex justify-end transition-all duration-300 md:hidden ${isMobileMenuOpen ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0'}`}
       >
-        {/* Backdrop */}
         <div
           className="absolute inset-0 bg-black/20 backdrop-blur-sm"
           onClick={() => setIsMobileMenuOpen(false)}
         />
-
-        {/* Sidebar Panel */}
         <div
           className={`relative flex h-full w-[280px] flex-col bg-white p-6 shadow-2xl transition-transform duration-300 ease-out ${isMobileMenuOpen ? 'translate-x-0' : 'translate-x-full'}`}
         >
@@ -70,29 +84,12 @@ export default function PredictedResultsPage() {
               <X size={24} />
             </button>
           </div>
-
           <nav className="flex flex-col space-y-6">
             <ul>
-              <li className="py-2">
-                <a href="#" className="text-base font-normal text-[#10181F]">
-                  Home
-                </a>
-              </li>
-              <li className="py-2">
-                <a href="#" className="text-base font-normal text-[#10181F]">
-                  About us
-                </a>
-              </li>
-              <li className="py-2">
-                <a href="#" className="text-base font-normal text-[#10181F]">
-                  FAQ
-                </a>
-              </li>
-              <li className="py-2">
-                <a href="#" className="text-base font-normal text-[#10181F]">
-                  Contact us
-                </a>
-              </li>
+              <li className="py-2"><a href="#" className="text-base font-normal text-[#10181F]">Home</a></li>
+              <li className="py-2"><a href="#" className="text-base font-normal text-[#10181F]">About us</a></li>
+              <li className="py-2"><a href="#" className="text-base font-normal text-[#10181F]">FAQ</a></li>
+              <li className="py-2"><a href="#" className="text-base font-normal text-[#10181F]">Contact us</a></li>
             </ul>
           </nav>
         </div>
@@ -104,7 +101,7 @@ export default function PredictedResultsPage() {
             Based on your answers
           </p>
           <h2 className="baikal-trial mx-auto max-w-md text-center text-[28px] leading-[1.1em] font-semibold text-[#10181F] md:text-[32px]">
-            We estimate you could reach 62kg by April 30th
+            We estimate you could reach {profile.goalWeight}kg by April 30th
           </h2>
           <p className="mx-auto md:mt-6 mt-[18px] md:mb-8 mb-6 max-w-md text-base font-normal text-[#10181FB2]">
             This projection is based on people with similar profiles following a
@@ -115,36 +112,7 @@ export default function PredictedResultsPage() {
         {/* Projection Chart Placeholder */}
         <div className="rounded-[14px] border border-[#10181F1A] p-8 shadow-[-4px_-4px_10px_0px_#00000005]">
           <div className="relative flex w-full flex-col justify-between">
-            {/* <div className="flex items-start justify-between">
-              <div className="space-y-1">
-                <p className="text-sm font-black tracking-widest text-[#1a1a1b]/20 uppercase">
-                  82kg
-                </p>
-                <div className="h-3 w-3 rounded-full border-2 border-white bg-[#D90655] shadow-sm" />
-              </div>
-              <div className="space-y-1 text-right">
-                <div className="mb-2 inline-block rounded-lg bg-[#34a853] px-3 py-1.5 text-[10px] font-black text-white shadow-lg shadow-[#34a853]/20">
-                  ESTIMATED TARGET: 62kg
-                </div>
-                <div className="flex justify-end">
-                  <div className="h-3 w-3 rounded-full border-2 border-white bg-[#34a853] shadow-sm" />
-                </div>
-              </div>
-            </div> */}
-
-            {/* Chart Line Placeholder */}
-            {/* <div className="absolute inset-0 -z-10 flex items-center justify-center px-6">
-              <div className="h-1 w-full rotate-12 transform rounded-full bg-gradient-to-r from-[#D90655] via-[#FC3F39] to-[#34a853] opacity-50" />
-            </div> */}
-
-            {/* <div className="flex justify-between border-t border-[#1a1a1b]/5 pt-8">
-              <span className='text-[#10181FB2] text-[14px] font-normal capitalize'>Now</span>
-              <span className='text-[#10181FB2] text-[14px] font-normal capitalize'>Feb</span>
-              <span className='text-[#10181FB2] text-[14px] font-normal capitalize'>Mar</span>
-              <span className='text-[#10181FB2] text-[14px] font-normal capitalize'>Apr</span>
-            </div> */}
-
-            <WeightChart />
+            <WeightChart currentWeight={profile.weight} goalWeight={profile.goalWeight} />
           </div>
         </div>
 
