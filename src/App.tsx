@@ -14,6 +14,8 @@ import PredictedResultsPage from './pages/PredictedResultsPage';
 import LoginPage from './pages/LoginPage';
 import { Dashboard } from './pages/Dashboard';
 
+import ResultSales from './pages/ResultSales';
+
 function App() {
   return (
     <Router>
@@ -25,6 +27,7 @@ function App() {
         <Route path="/email-form" element={<EmailFormPage />} />
         <Route path="/calculating" element={<CalculatingResultsPage />} />
         <Route path="/predicted" element={<PredictedResultsPage />} />
+        <Route path="/result-sales" element={<ResultSales />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/dashboard" element={<Dashboard />} />
         {/* Fallback for unknown routes */}
