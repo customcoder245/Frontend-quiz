@@ -86,6 +86,7 @@ export default function BreakPage2() {
         unit: 'kg'
       });
 
+      const gender = sessionStorage.getItem('quizGender') || 'female';
       // Save to sessionStorage for final submission
       sessionStorage.setItem('calculatedBMI', bmi.toString());
       sessionStorage.setItem('userProfileSnapshot', JSON.stringify({
@@ -93,7 +94,8 @@ export default function BreakPage2() {
         weight: Math.round(weightKg),
         height: Math.round(heightM * 100),
         goalWeight: Math.round(goalWeightKg),
-        bmi
+        bmi,
+        gender
       }));
     }
 

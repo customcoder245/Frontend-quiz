@@ -24,6 +24,34 @@ export default function ResultSales() {
     const [selectedPlan, setSelectedPlan] = useState('1-month');
     const [activeTab, setActiveTab] = useState('SCORE');
 
+    const [profile] = useState(() => {
+        const saved = sessionStorage.getItem('userProfileSnapshot');
+        if (saved) {
+            try {
+                return JSON.parse(saved);
+            } catch (e) {
+                console.error("Error parsing userProfileSnapshot", e);
+            }
+        }
+        return {
+            age: 32,
+            gender: 'female',
+            height: 165,
+            weight: 82,
+            goalWeight: 62,
+            bmi: 31.2
+        };
+    });
+
+    const getBMICategory = (bmi: number) => {
+        if (bmi < 18.5) return 'underweight';
+        if (bmi < 25) return 'normal';
+        if (bmi < 30) return 'overweight';
+        return 'obese';
+    };
+
+    const weightToLose = profile.weight - profile.goalWeight;
+
     const tabs = ['SCORE', 'BMI', 'HEALTH', 'FOOD', 'METABOLISM'];
 
     return (
@@ -99,35 +127,35 @@ export default function ResultSales() {
                                         <img src="/age.svg" className="h-4 w-4 opacity-40" alt="" />
                                         <span className="text-gray-400 font-medium text-sm">Age:</span>
                                     </div>
-                                    <span className="text-[#10181F] font-bold">32 years old</span>
+                                    <span className="text-[#10181F] font-bold">{profile.age} years old</span>
                                 </div>
                                 <div className="flex items-center justify-between group">
                                     <div className="flex items-center gap-3">
                                         <div className="h-4 w-4 rounded-full border-2 border-gray-200" />
                                         <span className="text-gray-400 font-medium text-sm">Sex:</span>
                                     </div>
-                                    <span className="text-[#10181F] font-bold">Female</span>
+                                    <span className="text-[#10181F] font-bold capitalize">{profile.gender}</span>
                                 </div>
                                 <div className="flex items-center justify-between group">
                                     <div className="flex items-center gap-3">
                                         <Clock size={16} className="text-gray-300" />
                                         <span className="text-gray-400 font-medium text-sm">Current BMI:</span>
                                     </div>
-                                    <span className="text-[#10181F] font-bold">31.2 overweight</span>
+                                    <span className="text-[#10181F] font-bold">{profile.bmi} {getBMICategory(profile.bmi)}</span>
                                 </div>
                                 <div className="flex items-center justify-between group">
                                     <div className="flex items-center gap-3">
                                         <img src="/height.svg" className="h-4 w-4 opacity-40" alt="" />
                                         <span className="text-gray-400 font-medium text-sm">Height:</span>
                                     </div>
-                                    <span className="text-[#10181F] font-bold">165 cm</span>
+                                    <span className="text-[#10181F] font-bold">{profile.height} cm</span>
                                 </div>
                                 <div className="flex items-center justify-between group">
                                     <div className="flex items-center gap-3">
                                         <img src="/weight.svg" className="h-4 w-4 opacity-40" alt="" />
                                         <span className="text-gray-400 font-medium text-sm">Weight:</span>
                                     </div>
-                                    <span className="text-[#10181F] font-bold">82 kg</span>
+                                    <span className="text-[#10181F] font-bold">{profile.weight} kg</span>
                                 </div>
                                 <div className="flex items-center justify-between group pt-2">
                                     <div className="flex items-center gap-3">
@@ -135,7 +163,7 @@ export default function ResultSales() {
                                         <span className="text-gray-400 font-medium text-sm">Goal:</span>
                                     </div>
                                     <div className="bg-[#E6F4EA] text-[#34A853] px-6 py-2 rounded-lg text-sm font-bold">
-                                        Lose 20 kg
+                                        Lose {weightToLose > 0 ? weightToLose : 0} kg
                                     </div>
                                 </div>
                             </div>

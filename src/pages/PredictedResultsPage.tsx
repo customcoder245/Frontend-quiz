@@ -154,7 +154,7 @@ export default function PredictedResultsPage() {
         <div className="w-full text-center ">
           <Button
             className="rounded-full px-14 pt-2 pb-3.5 text-xl font-normal md:pb-4 md:text-2xl"
-            onClick={() => navigate('/login')}
+            onClick={() => navigate('/result-sales')}
           >
             Continue to your <span className='md:block hidden'>&nbsp; personalized &nbsp; </span> plan
           </Button>
