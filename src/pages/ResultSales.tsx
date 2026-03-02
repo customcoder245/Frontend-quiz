@@ -269,7 +269,7 @@ export default function ResultSales() {
             <div className="mb-6 rounded-[14px] border border-[#FCB6401A] bg-[#FCB6401A] md:p-8 p-6">
               <div className="flex gap-4">
                 <div className="md:flex-1 flex-2">
-                    <img src="/sedentary.svg" className='w-full' alt="" />
+                  <img src="/sedentary.svg" className='w-full' alt="" />
                 </div>
                 <div className="flex-20">
                   <h4 className="md:text-xl text-base md:mb-3 mb-2 font-normal text-[#10181F]">
@@ -289,16 +289,16 @@ export default function ResultSales() {
             <div className="mb-6 rounded-[14px] border border-[#088E441A] bg-[#088E441A] md:p-8 p-6">
               <div className="flex gap-4">
                 <div className="md:flex-1 flex-2">
-                    <img src="/check.svg" className='w-full' alt="" />
+                  <img src="/check.svg" className='w-full' alt="" />
                 </div>
                 <div className="flex-20">
                   <p className="md:text-base text-sm leading-5 text-[#10181FB2]">
                     Daily energy target
                   </p>
                   <h4 className="md:text-xl text-base  mt-2 font-normal text-[#10181F]">
-                   ≈ 1,650 kcal / day
+                    ≈ 1,650 kcal / day
                   </h4>
-                  
+
                 </div>
               </div>
             </div>
@@ -486,7 +486,6 @@ export default function ResultSales() {
             As featured in:
           </p>
 
-          {/* Logos Container */}
           <div className="mb-16 flex flex-wrap items-center justify-center gap-4">
             {['forbes', 'health', 'womens-health', 'mens-health', 'yahoo'].map(
               (logo) => (
@@ -504,7 +503,6 @@ export default function ResultSales() {
             )}
           </div>
 
-          {/* Stats Row */}
           <div className="mx-auto mb-24 flex max-w-[800px] items-center justify-center gap-10 md:gap-16">
             <div className="text-center">
               <p className="amsiproblack mb-2 text-[34px] leading-none font-black text-[#E31D1C] md:text-[44px]">
@@ -538,11 +536,10 @@ export default function ResultSales() {
           </div>
         </div>
 
-        {/* Timeline Journey Card */}
         <div className="mx-auto max-w-[1000px] px-6 pb-12">
           <div className="relative mx-auto max-w-[850px] overflow-hidden rounded-[32px] border border-gray-100 bg-white p-10 text-left shadow-[0_15px_60px_-15px_rgba(0,0,0,0.05)] md:p-20">
             <div className="relative flex gap-10 md:gap-16">
-              {/* Vertical Progress Line */}
+
               <div className="relative flex shrink-0 flex-col items-center py-2">
                 <div className="z-10 h-4 w-4 rounded-full bg-[#E31D1C]" />
                 <div className="my-1 w-[3px] flex-1 bg-gradient-to-b from-[#E31D1C] via-[#EDC948] to-[#34A853]" />
@@ -552,7 +549,7 @@ export default function ResultSales() {
               </div>
 
               <div className="flex-1 space-y-16">
-                {/* Stage 1: NOW */}
+
                 <div>
                   <h4 className="amsiproblack mb-10 text-[28px] leading-tight font-black text-[#10181F]">
                     Now
@@ -575,7 +572,7 @@ export default function ResultSales() {
                   </ul>
                 </div>
 
-                {/* Stage 2: 7-10 DAYS */}
+
                 <div>
                   <h4 className="amsiproblack mb-10 text-[22px] leading-tight font-black text-[#10181F] uppercase">
                     IN 7–10 DAYS{' '}
@@ -601,7 +598,6 @@ export default function ResultSales() {
                   </ul>
                 </div>
 
-                {/* Stage 3: 30 DAYS */}
                 <div>
                   <h4 className="amsiproblack mb-10 text-[22px] leading-tight font-black text-[#10181F] uppercase">
                     IN 30 DAYS
@@ -638,7 +634,6 @@ export default function ResultSales() {
             coffee
           </h2>
 
-          {/* Timer Bar */}
           <div className="mx-auto mb-16 max-w-[750px] rounded-[20px] border border-orange-50/50 bg-white p-6 shadow-sm">
             <p className="text-[18px] font-black tracking-tighter text-[#E31D1C] uppercase md:text-[24px]">
               THIS OFFER ENDS IN:{' '}
@@ -749,7 +744,6 @@ export default function ResultSales() {
             </Button>
           </div>
 
-          {/* Payment & Security Footer */}
           <div className="flex flex-col items-center gap-10">
             <div className="flex flex-col items-center gap-4">
               <p className="text-[13px] font-black tracking-[0.2em] text-[#10181F] uppercase opacity-80">
@@ -869,7 +863,6 @@ export default function ResultSales() {
               ))}
             </div>
 
-            {/* Carousel Controls */}
             <div className="mt-12 flex items-center justify-between px-4">
               <div className="flex gap-2">
                 {[1, 2, 3, 4, 5, 6].map((i) => (
@@ -944,7 +937,6 @@ export default function ResultSales() {
             ))}
           </div>
 
-          {/* Award Banner */}
           <div className="flex flex-col items-center gap-10 rounded-[24px] border border-teal-50 bg-[#E6F4EA] p-8 text-center md:flex-row md:p-12 md:text-left">
             <div className="flex-shrink-0 rounded-2xl border border-teal-100 bg-white p-4 shadow-sm">
               <img
@@ -965,7 +957,7 @@ export default function ResultSales() {
           </div>
         </div>
       </section>
-      {/* What's included Section */}
+
       <section className="bg-white py-24">
         <div className="mx-auto max-w-[1200px] px-6">
           <h2 className="amsiproblack mb-16 text-center text-[34px] leading-tight font-black tracking-tight text-[#10181F] md:text-[48px]">
@@ -973,7 +965,6 @@ export default function ResultSales() {
           </h2>
 
           <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-            {/* First Column */}
             <div className="space-y-6">
               <div className="flex h-[320px] flex-col justify-between rounded-[32px] border border-gray-100 bg-white p-10 shadow-sm transition-shadow hover:shadow-md">
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#E31D1C]/10">
@@ -1004,7 +995,6 @@ export default function ResultSales() {
               </div>
             </div>
 
-            {/* Second Column - Large Image Card */}
             <div className="md:row-span-1">
               <div className="flex h-full flex-col overflow-hidden rounded-[32px] border border-gray-100 bg-[#FDF9F0] shadow-sm transition-shadow hover:shadow-md">
                 <div className="h-[450px] overflow-hidden">
@@ -1026,7 +1016,6 @@ export default function ResultSales() {
               </div>
             </div>
 
-            {/* Third Column - Mixed layout handled by continuing the grid */}
             <div className="md:col-span-2">
               <div className="flex h-[320px] overflow-hidden rounded-[32px] border border-gray-100 bg-[#FDF9F0] shadow-sm transition-shadow hover:shadow-md">
                 <div className="w-1/2 overflow-hidden">
@@ -1048,7 +1037,6 @@ export default function ResultSales() {
               </div>
             </div>
 
-            {/* Bottom Row */}
             <div className="rounded-[32px] border border-gray-100 bg-white p-10 shadow-sm transition-shadow hover:shadow-md">
               <div className="mb-10 flex h-10 w-10 items-center justify-center rounded-xl bg-[#E31D1C]/10">
                 <Users size={20} className="text-[#E31D1C]" />
@@ -1091,7 +1079,6 @@ export default function ResultSales() {
           </p>
 
           <div className="grid items-start gap-10 md:grid-cols-3">
-            {/* Phone 1: Kimberly Clark */}
             <div className="group perspective-1000 relative">
               <div className="relative h-[650px] overflow-hidden rounded-[60px] border-[8px] border-[#2A2F35] bg-[#10181F] p-4 shadow-[0_50px_100px_-20px_rgba(0,0,0,0.3)]">
                 <div className="flex h-full flex-col overflow-hidden rounded-[45px] bg-white px-6 pt-10">
@@ -1167,7 +1154,6 @@ export default function ResultSales() {
               </div>
             </div>
 
-            {/* Phone 2: How's That Possible? */}
             <div className="group relative z-10 scale-105">
               <div className="h-[650px] rounded-[60px] border-[8px] border-[#2A2F35] bg-[#10181F] p-4 shadow-[0_60px_120px_-30px_rgba(217,6,85,0.2)]">
                 <div className="flex h-full flex-col overflow-hidden rounded-[45px] bg-white px-8 pt-12">
@@ -1229,7 +1215,6 @@ export default function ResultSales() {
               </div>
             </div>
 
-            {/* Phone 3: Testimonials */}
             <div className="group relative">
               <div className="h-[650px] rounded-[60px] border-[8px] border-[#2A2F35] bg-[#10181F] p-4 shadow-[0_50px_100px_-20px_rgba(0,0,0,0.3)]">
                 <div className="flex h-full flex-col overflow-hidden rounded-[45px] bg-[#FFFDF5] px-6 pt-12">
@@ -1431,7 +1416,6 @@ export default function ResultSales() {
             </Button>
           </div>
 
-          {/* Payment & Security Footer */}
           <div className="flex flex-col items-center gap-12">
             <div className="flex flex-col items-center gap-6">
               <p className="text-[14px] font-black tracking-[0.2em] text-[#10181F] uppercase opacity-80">
