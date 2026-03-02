@@ -161,7 +161,7 @@ export default function ResultSales() {
       </div>
 
       {/* Profile Summary Section */}
-      <section className="bg-white pt-8 pb-16">
+      <section className="bg-white pt-8 md:pb-30 pb-20">
         <div className="mx-auto max-w-[880px] px-6">
           <div className="mb-11 text-center md:mb-16">
             <h2 className="baikal-trial text-[28px] leading-[1.2em] font-semibold text-[#10181F] md:text-[32px]">
@@ -169,13 +169,13 @@ export default function ResultSales() {
             </h2>
           </div>
 
-          <div className="mb-8 rounded-[14px] border border-[#10181F1A] md:p-8 p-6 shadow-[-4px_-4px_10px_0px_#00000005]">
+          <div className="mb-8 rounded-[14px] border border-[#10181F1A] p-6 shadow-[-4px_-4px_10px_0px_#00000005] md:p-8">
             {/* Summary Header */}
             <div className="mb-8 flex items-center gap-4">
               <div className="">
                 <img src="profile-icon.svg" alt="" />
               </div>
-              <h3 className="text-xl font-semibold text-[#10181F] md:text-2xl">
+              <h3 className="baikal-trial text-xl font-semibold text-[#10181F] md:text-2xl">
                 Your profile summary
               </h3>
             </div>
@@ -249,11 +249,7 @@ export default function ResultSales() {
                 </div>
                 <div className="mb-0 flex items-center justify-between pt-1 md:pb-4.5">
                   <div className="flex items-center gap-3">
-                    <img
-                      src="/goal.svg"
-                      className=""
-                      alt=""
-                    />
+                    <img src="/goal.svg" className="" alt="" />
                     <span className="text-base font-normal text-[#10181F80] md:text-xl">
                       Goal:
                     </span>
@@ -266,16 +262,16 @@ export default function ResultSales() {
             </div>
 
             {/* Metabolism Block */}
-            <div className="mb-6 rounded-[14px] border border-[#FCB6401A] bg-[#FCB6401A] md:p-8 p-6">
+            <div className="mb-6 rounded-[14px] border border-[#FCB6401A] bg-[#FCB6401A] p-6 md:p-8">
               <div className="flex gap-4">
-                <div className="md:flex-1 flex-2">
-                  <img src="/sedentary.svg" className='w-full' alt="" />
+                <div className="h-6 w-4 md:h-5 md:w-6">
+                  <img src="/sedentary.svg" className="w-full" alt="" />
                 </div>
                 <div className="flex-20">
-                  <h4 className="md:text-xl text-base md:mb-3 mb-2 font-normal text-[#10181F]">
+                  <h4 className="mb-2 text-base font-normal text-[#10181F] md:mb-3 md:text-xl">
                     Sedentary-Adjusted Metabolism
                   </h4>
-                  <p className="md:text-base text-sm leading-5 text-[#10181FB2]">
+                  <p className="text-sm leading-5 text-[#10181FB2] md:text-base">
                     Your metabolism is currently affected by excess body fat and
                     limited daily movement. With the right nutrition structure
                     and gradual activity increase, your body can shift into
@@ -286,44 +282,45 @@ export default function ResultSales() {
             </div>
 
             {/* Energy Target Block */}
-            <div className="mb-6 rounded-[14px] border border-[#088E441A] bg-[#088E441A] md:p-8 p-6">
+            <div className="mb-4 rounded-[14px] border border-[#088E441A] bg-[#088E441A] p-6 md:mb-6 md:p-8">
               <div className="flex gap-4">
-                <div className="md:flex-1 flex-2">
-                  <img src="/check.svg" className='w-full' alt="" />
+                <div className="h-4 w-4 md:h-5 md:w-5">
+                  <img src="/check.svg" className="w-full" alt="" />
                 </div>
                 <div className="flex-20">
-                  <p className="md:text-base text-sm leading-5 text-[#10181FB2]">
+                  <p className="text-sm leading-5 text-[#10181FB2] md:text-base">
                     Daily energy target
                   </p>
-                  <h4 className="md:text-xl text-base  mt-2 font-normal text-[#10181F]">
+                  <h4 className="mt-2 text-base font-normal text-[#10181F] md:text-xl">
                     ≈ 1,650 kcal / day
                   </h4>
-
                 </div>
               </div>
             </div>
             {/* Bottom Detail Grid */}
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div className="flex items-center gap-4 rounded-[16px] border border-gray-50 bg-[#F8F9FA] p-5">
-                <Zap size={20} className="shrink-0 text-[#10181F]" />
+              <div className="flex gap-3 rounded-[12px] border border-gray-50 bg-[#10181F08] p-6">
                 <div>
-                  <p className="mb-0.5 text-[10px] font-bold tracking-wider text-gray-400 uppercase">
+                  <img src="/calorie.svg" alt="" />
+                </div>
+                <div>
+                  <p className="mb-2 text-sm text-[#10181FB2]">
                     Daily calorie range
                   </p>
-                  <p className="text-sm font-black text-[#10181F]">
+                  <p className="text-base font-semibold text-[#10181F]">
                     {kcalMin.toLocaleString()} – {kcalMax.toLocaleString()} kcal
                   </p>
                 </div>
               </div>
-              <div className="flex items-center gap-4 rounded-[16px] border border-gray-50 bg-[#F8F9FA] p-5">
-                <div className="h-5 w-5 shrink-0 text-[#10181F]">
-                  <Users size={18} />
+              <div className="flex gap-3 rounded-[12px] border border-gray-50 bg-[#10181F08] p-6">
+                <div>
+                  <img src="/protein.svg" alt="" />
                 </div>
                 <div>
-                  <p className="mb-0.5 text-[10px] font-bold tracking-wider text-gray-400 uppercase">
+                  <p className="mb-2 text-sm text-[#10181FB2]">
                     Protein minimum
                   </p>
-                  <p className="text-sm font-black text-[#10181F]">
+                  <p className="text-base font-semibold text-[#10181F]">
                     ≥ {proteinMin} g protein / day
                   </p>
                 </div>
@@ -334,76 +331,90 @@ export default function ResultSales() {
 
         {/* Your Plan Section - NEW */}
         <div className="mx-auto max-w-[880px] px-6">
-          <div className="mb-8 rounded-[14px] border border-[#10181F1A] p-8 shadow-[-4px_-4px_10px_0px_#00000005]">
-            <div className="mb-8 flex items-center gap-4">
-              <div className="rounded-lg bg-[#FFF1F2] p-2">
-                <img src="/target.svg" alt="" className="h-6 w-6" />
+          <div className="mb-8 rounded-[14px] border border-[#10181F1A] p-6 shadow-[-4px_-4px_10px_0px_#00000005] md:p-8">
+            <div className="mb-6 flex items-center gap-4 md:mb-8">
+              <div className="">
+                <img src="/plan.svg" alt="" className="" />
               </div>
-              <h3 className="text-2xl font-black text-[#10181F]">Your plan:</h3>
+              <h3 className="baikal-trial text-xl font-semibold text-[#10181F] md:text-2xl">
+                Your plan:
+              </h3>
             </div>
 
             {/* Estimated Results Green Card */}
-            <div className="relative mb-8 flex items-center gap-6 rounded-[16px] bg-[#E6F4EA] p-6">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#34A853] text-white">
-                <Check size={24} strokeWidth={4} />
+            <div className="mb-4 flex items-end justify-between rounded-[14px] border border-[#088E441A] bg-[#088E441A] p-6 md:mb-6 md:items-center md:p-8">
+              <div className="flex w-3/4 gap-5">
+                <div className="h-4 w-4 md:h-5 md:w-5">
+                  <img src="/check.svg" className="w-full" alt="" />
+                </div>
+                <div className="flex-20">
+                  <p className="text-sm leading-5 text-[#10181FB2] md:text-base">
+                    Estimated results
+                  </p>
+                  <h4 className="mt-2 text-base font-normal text-[#10181F] md:text-xl">
+                    12–18 lbs in 6 weeks
+                  </h4>
+                </div>
               </div>
-              <div className="flex-1">
-                <p className="mb-1 text-[12px] font-bold tracking-wider text-gray-500 uppercase">
-                  Estimated results
+              <div>
+                <p className="max-w-[100px] text-right text-sm font-normal text-[#088E44]">
+                  ≈ 1–2 dress sizes smaller
                 </p>
-                <p className="text-2xl font-black text-[#10181F]">
-                  {projectedLossLbsMin}–{projectedLossLbsMax} lbs in 6 weeks
-                </p>
-              </div>
-              <div className="max-w-[100px] text-right text-[11px] leading-tight font-black text-[#34A853] uppercase">
-                =1–2 dress sizes smaller
               </div>
             </div>
 
             {/* Status Grid */}
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div className="flex items-start gap-4 rounded-[16px] bg-[#F8F9FA] p-6">
-                <Users size={20} className="mt-1 shrink-0 text-[#10181F]" />
+
+              <div className="flex gap-3 rounded-[12px] border border-gray-50 bg-[#10181F08] p-6">
                 <div>
-                  <p className="mb-1 text-[11px] font-bold tracking-wider text-gray-400 uppercase">
+                  <img src="/user.svg" alt="" />
+                </div>
+                <div>
+                  <p className="mb-2 text-sm text-[#10181FB2]">
                     Metabolic profile
                   </p>
-                  <p className="text-[15px] font-black text-[#10181F]">
+                  <p className="text-base font-semibold text-[#10181F]">
                     Sedentary-adjusted metabolism
                   </p>
                 </div>
               </div>
-              <div className="flex items-start gap-4 rounded-[16px] bg-[#F8F9FA] p-6">
-                <div className="mt-1 shrink-0 text-[#10181F]">
-                  <Zap size={20} />
+
+              <div className="flex gap-3 rounded-[12px] border border-gray-50 bg-[#10181F08] p-6">
+                <div>
+                  <img src="/energy.svg" alt="" />
                 </div>
                 <div>
-                  <p className="mb-1 text-[11px] font-bold tracking-wider text-gray-400 uppercase">
+                  <p className="mb-2 text-sm text-[#10181FB2]">
                     Energy boost
                   </p>
-                  <p className="text-[15px] font-black text-[#10181F]">Day 3</p>
+                  <p className="text-base font-semibold text-[#10181F]">
+                    Day 3
+                  </p>
                 </div>
               </div>
-              <div className="flex items-start gap-4 rounded-[16px] bg-[#F8F9FA] p-6">
-                <div className="mt-1 shrink-0 text-red-500">
-                  <Zap size={20} fill="currentColor" />
+                <div className="flex gap-3 rounded-[12px] border border-gray-50 bg-[#10181F08] p-6">
+                <div>
+                  <img src="/burn.svg" alt="" />
                 </div>
                 <div>
-                  <p className="mb-1 text-[11px] font-bold tracking-wider text-gray-400 uppercase">
+                  <p className="mb-2 text-sm text-[#10181FB2]">
                     Fat burn mode
                   </p>
-                  <p className="text-[15px] font-black text-[#10181F]">
-                    Week 1
+                  <p className="text-base font-semibold text-[#10181F]">
+                   Week 1
                   </p>
                 </div>
               </div>
-              <div className="flex items-start gap-4 rounded-[16px] bg-[#F8F9FA] p-6">
-                <Star size={20} className="mt-1 shrink-0 text-[#10181F]" />
+                <div className="flex gap-3 rounded-[12px] border border-gray-50 bg-[#10181F08] p-6">
                 <div>
-                  <p className="mb-1 text-[11px] font-bold tracking-wider text-gray-400 uppercase">
+                  <img src="/visible.svg" alt="" />
+                </div>
+                <div>
+                  <p className="mb-2 text-sm text-[#10181FB2]">
                     Visible results
                   </p>
-                  <p className="text-[15px] font-black text-[#10181F]">
+                  <p className="text-base font-semibold text-[#10181F]">
                     Week 2–3
                   </p>
                 </div>
@@ -414,21 +425,21 @@ export default function ResultSales() {
 
         {/* Recipe Combinations Section - NEW */}
         <div className="mx-auto max-w-[880px] px-6">
-          <div className="mb-8 rounded-[14px] border border-[#10181F1A] p-8 shadow-[-4px_-4px_10px_0px_#00000005]">
-            <div className="mb-4 flex items-center gap-4">
-              <div className="rounded-lg bg-[#FFF1F2] p-2">
-                <img src="/meal-icon.svg" alt="" className="h-6 w-6" />
+          <div className="rounded-[14px] border border-[#10181F1A] p-6 shadow-[-4px_-4px_10px_0px_#00000005] md:p-8">
+            <div className="mb-3 flex items-center gap-4 ">
+              <div className="">
+                <img src="/mediterranean.svg" alt="" className="" />
               </div>
-              <h3 className="text-2xl font-black text-[#10181F]">
+              <h3 className="baikal-trial text-xl font-semibold text-[#10181F] md:text-2xl">
                 Mediterranean recipe combinations
               </h3>
             </div>
-            <p className="mb-10 text-[15px] text-gray-500">
+            <p className="text-[#10181FB2] text-base mb-6 md:mb-8">
               Unlock 1000+ Recipe combinations, flexible, mix and match crafted
               for lasting fat loss
             </p>
 
-            <div className="mb-12 grid grid-cols-1 gap-6 sm:grid-cols-3">
+            <div className="md:mb-8 mb-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
               {[
                 {
                   img: '/breakfast.png',
@@ -448,19 +459,20 @@ export default function ResultSales() {
               ].map((item, i) => (
                 <div
                   key={i}
-                  className="flex h-full flex-col rounded-[24px] border border-gray-50 bg-[#F8F9FA] p-4"
+                  className="bg-[#10181F08] py-5.5 px-6 rounded-[12px]"
                 >
-                  <div className="mb-4 aspect-[4/3] overflow-hidden rounded-[16px] bg-white">
+                  <div className="mb-3 h-[115px] overflow-hidden rounded-[12px] bg-white">
                     <img
                       src={item.img}
                       alt={item.label}
-                      className="h-full w-full object-cover p-2"
+                      className="h-full w-full object-cover  object-center
+ "
                     />
                   </div>
-                  <h4 className="mb-1 text-lg font-black text-[#10181F]">
+                  <h4 className="text-[#10181F] text-base font-semibold mb-1.5">
                     {item.label}
                   </h4>
-                  <p className="text-[12px] leading-tight font-medium text-gray-400">
+                  <p className="text-[#10181FB2] text-sm">
                     {item.desc}
                   </p>
                 </div>
@@ -469,7 +481,7 @@ export default function ResultSales() {
 
             <div className="flex justify-center">
               <Button
-                className="w-full max-w-[450px] rounded-full bg-gradient-to-r from-[#D90655] to-[#FC3F39] py-8 text-xl font-black shadow-2xl shadow-[#D90655]/40 transition-transform hover:scale-[1.02] active:scale-[0.98]"
+                className="cursor-pointer w-full md:max-w-[334px] max-w-[100%] h-16 rounded-full bg-gradient-to-r from-[#D90655] to-[#FC3F39] text-white text-xl font-bold shadow-xl transition-transform hover:scale-[1.02] active:scale-[0.98]"
                 onClick={() => navigate('/login')}
               >
                 Unlock your full plan
@@ -480,28 +492,37 @@ export default function ResultSales() {
       </section>
 
       {/* Featured In & Stats Section */}
-      <section className="bg-white pt-20">
-        <div className="mx-auto max-w-[1000px] px-6 text-center">
-          <p className="amsiproblack mb-10 text-[20px] font-black tracking-tight text-[#10181F]">
+      <section className="md:py-30 py-20 bg-[#10181F0D]">
+        <div className="mx-auto max-w-[880px] px-6 text-center">
+          <p className="md:mb-10 mb-4  baikal-trial text-xl font-semibold text-[#10181F] md:text-2xl">
             As featured in:
           </p>
 
-          <div className="mb-16 flex flex-wrap items-center justify-center gap-4">
-            {['forbes', 'health', 'womens-health', 'mens-health', 'yahoo'].map(
-              (logo) => (
-                <div
-                  key={logo}
-                  className="flex h-[70px] min-w-[140px] items-center justify-center rounded-2xl border border-gray-100 bg-white px-8 py-5 shadow-sm"
-                >
-                  <img
-                    src={`/${logo}.svg`}
-                    alt={logo}
-                    className="h-7 object-contain opacity-60 grayscale"
-                  />
-                </div>
-              )
-            )}
-          </div>
+         
+          <div className="grid grid-cols-2 gap-6 md:mb-8 mb-6 md:flex md:flex-wrap md:justify-between">
+    
+    <div className="">
+      <img src="/forbes.png" alt="Forbes" className="w-full" />
+    </div>
+
+    <div className="">
+      <img src="/health.png" alt="Health" className="w-full" />
+    </div>
+
+    <div className="">
+      <img src="/women-health.png" alt="Women's Health" className="w-full" />
+    </div>
+
+    <div className="">
+      <img src="/yahoo.png" alt="Yahoo" className="w-full" />
+    </div>
+
+    {/* Full width on mobile */}
+    <div className="col-span-2  md:col-auto ">
+      <img src="/men-health.png" alt="Men's Health" className="w-full" />
+    </div>
+
+  </div>
 
           <div className="mx-auto mb-24 flex max-w-[800px] items-center justify-center gap-10 md:gap-16">
             <div className="text-center">
@@ -539,7 +560,6 @@ export default function ResultSales() {
         <div className="mx-auto max-w-[1000px] px-6 pb-12">
           <div className="relative mx-auto max-w-[850px] overflow-hidden rounded-[32px] border border-gray-100 bg-white p-10 text-left shadow-[0_15px_60px_-15px_rgba(0,0,0,0.05)] md:p-20">
             <div className="relative flex gap-10 md:gap-16">
-
               <div className="relative flex shrink-0 flex-col items-center py-2">
                 <div className="z-10 h-4 w-4 rounded-full bg-[#E31D1C]" />
                 <div className="my-1 w-[3px] flex-1 bg-gradient-to-b from-[#E31D1C] via-[#EDC948] to-[#34A853]" />
@@ -549,7 +569,6 @@ export default function ResultSales() {
               </div>
 
               <div className="flex-1 space-y-16">
-
                 <div>
                   <h4 className="amsiproblack mb-10 text-[28px] leading-tight font-black text-[#10181F]">
                     Now
@@ -571,7 +590,6 @@ export default function ResultSales() {
                     ))}
                   </ul>
                 </div>
-
 
                 <div>
                   <h4 className="amsiproblack mb-10 text-[22px] leading-tight font-black text-[#10181F] uppercase">
