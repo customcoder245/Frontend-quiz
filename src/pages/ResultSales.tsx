@@ -393,7 +393,7 @@ export default function ResultSales() {
                   </p>
                 </div>
               </div>
-                <div className="flex gap-3 rounded-[12px] border border-gray-50 bg-[#10181F08] p-6">
+              <div className="flex gap-3 rounded-[12px] border border-gray-50 bg-[#10181F08] p-6">
                 <div>
                   <img src="/burn.svg" alt="" />
                 </div>
@@ -402,11 +402,11 @@ export default function ResultSales() {
                     Fat burn mode
                   </p>
                   <p className="text-base font-semibold text-[#10181F]">
-                   Week 1
+                    Week 1
                   </p>
                 </div>
               </div>
-                <div className="flex gap-3 rounded-[12px] border border-gray-50 bg-[#10181F08] p-6">
+              <div className="flex gap-3 rounded-[12px] border border-gray-50 bg-[#10181F08] p-6">
                 <div>
                   <img src="/visible.svg" alt="" />
                 </div>
@@ -498,31 +498,31 @@ export default function ResultSales() {
             As featured in:
           </p>
 
-         
+
           <div className="grid grid-cols-2 gap-6 md:mb-8 mb-6 md:flex md:flex-wrap md:justify-between">
-    
-    <div className="">
-      <img src="/forbes.png" alt="Forbes" className="w-full" />
-    </div>
 
-    <div className="">
-      <img src="/health.png" alt="Health" className="w-full" />
-    </div>
+            <div className="">
+              <img src="/forbes.png" alt="Forbes" className="w-full" />
+            </div>
 
-    <div className="">
-      <img src="/women-health.png" alt="Women's Health" className="w-full" />
-    </div>
+            <div className="">
+              <img src="/health.png" alt="Health" className="w-full" />
+            </div>
 
-    <div className="">
-      <img src="/yahoo.png" alt="Yahoo" className="w-full" />
-    </div>
+            <div className="">
+              <img src="/women-health.png" alt="Women's Health" className="w-full" />
+            </div>
 
-    {/* Full width on mobile */}
-    <div className="col-span-2  md:col-auto ">
-      <img src="/men-health.png" alt="Men's Health" className="w-full" />
-    </div>
+            <div className="">
+              <img src="/yahoo.png" alt="Yahoo" className="w-full" />
+            </div>
 
-  </div>
+            {/* Full width on mobile */}
+            <div className="col-span-2  md:col-auto ">
+              <img src="/men-health.png" alt="Men's Health" className="w-full" />
+            </div>
+
+          </div>
 
           <div className="mx-auto mb-24 flex max-w-[800px] items-center justify-center gap-10 md:gap-16">
             <div className="text-center">
